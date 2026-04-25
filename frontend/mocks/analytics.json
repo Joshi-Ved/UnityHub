@@ -1,0 +1,12 @@
+{
+  "verifiedHours": 847,
+  "activeVolunteers": 128,
+  "tasksCompleted": 291,
+  "vitMinted": 15420,
+  "funnel": {
+    "submitted": 100,
+    "aiProcessing": 79,
+    "approved": 67,
+    "tokenMinted": 58
+  }
+}
