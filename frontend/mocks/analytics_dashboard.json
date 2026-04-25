@@ -1,0 +1,13 @@
+{
+  "kpi": {
+    "verified_hours": 1250,
+    "active_volunteers": 85,
+    "tasks_completed": 420,
+    "vit_minted": 15400
+  },
+  "leaderboard": [
+    {"name": "Sneha P.", "tasks": 45, "vit": 1200},
+    {"name": "Rahul M.", "tasks": 38, "vit": 950},
+    {"name": "Aman K.", "tasks": 32, "vit": 800}
+  ]
+}

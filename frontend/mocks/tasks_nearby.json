@@ -1,0 +1,24 @@
+{
+  "tasks": [
+    {
+      "id": "t_123",
+      "title": "Beach Cleanup Drive",
+      "ngo_name": "Ocean Savers",
+      "distance_km": 2.5,
+      "skills": ["Physical Labor"],
+      "token_reward": 15,
+      "location": {"lat": 19.0760, "lng": 72.8777},
+      "status": "available"
+    },
+    {
+      "id": "t_124",
+      "title": "Tree Plantation",
+      "ngo_name": "Green Earth",
+      "distance_km": 5.0,
+      "skills": ["Gardening"],
+      "token_reward": 20,
+      "location": {"lat": 19.0800, "lng": 72.8800},
+      "status": "in-progress"
+    }
+  ]
+}
