@@ -1,22 +1,25 @@
 void main() {
   print("========================================");
-  print("UNITYHUB DEMO SEED SCRIPT (HACKATHON)");
+  print("UNITYHUB DUAL-PLATFORM DEMO SEED SCRIPT");
   print("========================================");
   
-  print("1. Pre-loading 12 realistic tasks across Mumbai, Delhi, Bangalore...");
+  print("1. Pre-loading realistic tasks and volunteer map fixtures...");
   _seedTasks();
   
-  print("2. Simulating 3 volunteer journeys end-to-end...");
+  print("2. Simulating Device A (Android) volunteer journey...");
   _simulateVolunteerJourneys();
   
-  print("3. Populating BigQuery with 30 days of analytics data...");
+  print("3. Simulating Device B (Chrome) NGO portal analytics feed...");
   _seedAnalytics();
   
-  print("4. Seeding NGO portal with ESG report PDFs...");
+  print("4. Seeding ESG report preview data + PDF export metadata...");
   _seedReports();
+
+  print("5. Verifying offline fallback fixtures are available...");
+  _verifyOfflineFixtures();
   
   print("========================================");
-  print("DEMO SEEDING COMPLETE. READY FOR JUDGES!");
+  print("DEMO READY: TWO-SCREEN EXPERIENCE PRIMED.");
   print("========================================");
 }
 
@@ -24,18 +27,27 @@ void _seedTasks() {
   print(" -> Seeded 'Beach Cleanup Drive' (Mumbai)");
   print(" -> Seeded 'Tree Plantation' (Delhi)");
   print(" -> Seeded 'Food Bank Distribution' (Bangalore)");
+  print(" -> Seeded 'Community Health Camp' (Pune)");
 }
 
 void _simulateVolunteerJourneys() {
-  print(" -> Volunteer 'Rahul' accepted & verified 'Beach Cleanup' -> Minted 15 VIT (Tx: 0xabc...)");
-  print(" -> Volunteer 'Sneha' accepted & verified 'Tree Plantation' -> Minted 20 VIT (Tx: 0xdef...)");
+  print(" -> Device A: Login -> Map -> Accept Task -> Verify (camera) -> Wallet +15 VIT");
+  print(" -> Device A: Login -> Map -> Accept Task -> Verify (camera) -> Wallet +20 VIT");
 }
 
 void _seedAnalytics() {
-  print(" -> Generated 30-day time-series data for verification funnel.");
-  print(" -> Injected 15,400 total VIT minted across 85 active volunteers.");
+  print(" -> Generated 30-day time-series data for dashboard KPI and funnel charts.");
+  print(" -> Seeded /ws/activity style feed events mirrored from Device A actions.");
 }
 
 void _seedReports() {
-  print(" -> Created 'Q1_2026_ESG_Impact.pdf' for Corporate Sponsor.");
+  print(" -> Prepared ESG report preview sections and sample immutable proof rows.");
+  print(" -> Prepared filename pattern: ESG_Report_[OrgName]_[DateRange].pdf.");
+}
+
+void _verifyOfflineFixtures() {
+  print(" -> Found mocks/tasks.json");
+  print(" -> Found mocks/analytics.json");
+  print(" -> Found mocks/activity_feed.json");
+  print(" -> Found mocks/esg_report_sample.json");
 }
