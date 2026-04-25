@@ -1,13 +1,34 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from routes.impact import router as impact_router
+from routes.digilocker import router as digilocker_router
+from core_limiter import limiter
 
 app = FastAPI(
     title="UnityHub Secure Backend",
     description="Backend AI Oracle with OWASP 2026 Middlewares",
     version="1.0.0"
 )
+
+async def verify_biometric_jwt(authorization: str = Header(None)):
+    """
+    Mock dependency that verifies a JWT contains biometric assertions.
+    In production, validates `amr: ["face", "fingerprint"]`.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid JWT token.")
+    token = authorization.split(" ")[1]
+    # Simulate a check: token must equal "mock_biometric_token"
+    if token != "mock_biometric_token":
+        raise HTTPException(status_code=403, detail="JWT lacks biometric assertions (amr).")
+    return token
+
+# --- Rate Limiting (SlowAPI) ---
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # --- OWASP 2026 Middleware Security Best Practices ---
 
@@ -46,7 +67,9 @@ async def add_security_headers(request: Request, call_next):
 
 # Register API Routers
 app.include_router(impact_router)
+app.include_router(digilocker_router)
 
 @app.get("/")
-async def health_check():
+@limiter.limit("5/minute")
+async def health_check(request: Request):
     return {"status": "Secure AI Oracle is running."}

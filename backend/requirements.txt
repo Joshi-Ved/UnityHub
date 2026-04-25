@@ -5,3 +5,5 @@ google-genai
 eth-account
 python-multipart
 pillow
+slowapi
+google-cloud-secret-manager
