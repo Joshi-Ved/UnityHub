@@ -52,8 +52,8 @@ class GeminiOracleService:
         domain = {
             "name": "UnityHub",
             "version": "1",
-            "chainId": 137, # Polygon
-            "verifyingContract": "0x0000000000000000000000000000000000000000" # Placeholder
+            "chainId": 80002, # Polygon Amoy
+            "verifyingContract": "0xPLACEHOLDER_AMOY_CONTRACT_ADDRESS_1234567" # Placeholder
         }
         types_schema = {
             "VerifyAndMint": [
