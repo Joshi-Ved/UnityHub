@@ -11,9 +11,9 @@ contract UnityImpact is ERC1155, ERC1155URIStorage, Ownable, EIP712 {
     using ECDSA for bytes32;
 
     address public oracleAddress;
-    mapping(bytes => bool) public usedSignatures;
+    mapping(address => uint256) public nonces;
 
-    bytes32 private constant MINT_TYPEHASH = keccak256("VerifyAndMint(address to,uint256 taskId,uint256 amount,string ipfsUri)");
+    bytes32 private constant MINT_TYPEHASH = keccak256("VerifyAndMint(address to,uint256 taskId,uint256 amount,uint256 nonce,string ipfsUri)");
 
     event OracleUpdated(address oldOracle, address newOracle);
     event ImpactMinted(address indexed to, uint256 indexed taskId, uint256 amount, string ipfsUri);
@@ -44,16 +44,17 @@ contract UnityImpact is ERC1155, ERC1155URIStorage, Ownable, EIP712 {
         string memory ipfsUri, 
         bytes memory signature
     ) internal {
-        require(!usedSignatures[signature], "UnityImpact: Signature already used");
-        usedSignatures[signature] = true;
-
         bytes32 structHash = keccak256(abi.encode(
             MINT_TYPEHASH,
             to,
             taskId,
             amount,
+            nonces[to],
             keccak256(bytes(ipfsUri))
         ));
+
+        // Increment nonce after using it to prevent replay
+        nonces[to]++;
 
         bytes32 hash = _hashTypedDataV4(structHash);
         address signer = ECDSA.recover(hash, signature);

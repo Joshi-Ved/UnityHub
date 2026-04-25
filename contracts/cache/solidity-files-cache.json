@@ -722,8 +722,8 @@
       ]
     },
     "C:\\Projects\\UnityHub_Clone\\contracts\\contracts\\UnityImpact.sol": {
-      "lastModificationDate": 1777116746761,
-      "contentHash": "cb9ce127dd0116599f2bd775d896d74c",
+      "lastModificationDate": 1777123906019,
+      "contentHash": "2d875df9ca3fb893371ebbc14729a386",
       "sourceName": "contracts/UnityImpact.sol",
       "solcConfig": {
         "version": "0.8.24",

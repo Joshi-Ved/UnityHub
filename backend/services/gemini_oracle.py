@@ -47,7 +47,7 @@ class GeminiOracleService:
         v2 = np.array(vec2)
         return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
-    def generate_eip712_signature(self, user_address: str, token_id: int, amount: int, ipfs_uri: str) -> str:
+    def generate_eip712_signature(self, user_address: str, token_id: int, amount: int, nonce: int, ipfs_uri: str) -> str:
         # EIP-712 Domain and Types for verifyAndMint
         domain = {
             "name": "UnityHub",
@@ -60,6 +60,7 @@ class GeminiOracleService:
                 {"name": "to", "type": "address"},
                 {"name": "taskId", "type": "uint256"},
                 {"name": "amount", "type": "uint256"},
+                {"name": "nonce", "type": "uint256"},
                 {"name": "ipfsUri", "type": "string"}
             ]
         }
@@ -67,6 +68,7 @@ class GeminiOracleService:
             "to": user_address,
             "taskId": token_id,
             "amount": amount,
+            "nonce": nonce,
             "ipfsUri": ipfs_uri
         }
         
@@ -142,8 +144,9 @@ class GeminiOracleService:
             # 4. Generate Cryptographic EIP-712 Signature
             token_id = 1
             amount = 10 # Base reward
+            nonce = 0 # In a real app, backend would track this per user or query contract
             ipfs_uri = f"ipfs://placeholderCID_for_{token_id}/metadata.json"
-            signature = self.generate_eip712_signature(user_address, token_id, amount, ipfs_uri)
+            signature = self.generate_eip712_signature(user_address, token_id, amount, nonce, ipfs_uri)
             
             return {
                 "success": True,
