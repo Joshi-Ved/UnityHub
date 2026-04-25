@@ -8,6 +8,7 @@ from google import genai
 from google.genai import types
 from eth_account import Account
 from eth_account.messages import encode_typed_data
+from eth_utils import is_address, to_checksum_address
 from google.cloud import secretmanager
 
 # Make sure schemas can be imported
@@ -47,13 +48,28 @@ class GeminiOracleService:
         v2 = np.array(vec2)
         return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
+    def _resolve_chain_id(self) -> int:
+        raw_value = os.environ.get("POLYGON_CHAIN_ID", os.environ.get("CHAIN_ID", "80002"))
+        try:
+            return int(raw_value)
+        except (TypeError, ValueError):
+            return 80002
+
+    def _resolve_verifying_contract(self) -> str:
+        configured_address = os.environ.get("UNITY_IMPACT_CONTRACT_ADDRESS") or os.environ.get("IMPACT_CONTRACT_ADDRESS")
+        if configured_address and is_address(configured_address):
+            return to_checksum_address(configured_address)
+
+        # Keep signing deterministic in local/test mode even when no deployment address is configured.
+        return "0x0000000000000000000000000000000000000001"
+
     def generate_eip712_signature(self, user_address: str, token_id: int, amount: int, nonce: int, ipfs_uri: str) -> str:
         # EIP-712 Domain and Types for verifyAndMint
         domain = {
             "name": "UnityHub",
             "version": "1",
-            "chainId": 80002, # Polygon Amoy
-            "verifyingContract": "0xPLACEHOLDER_AMOY_CONTRACT_ADDRESS_1234567" # Placeholder
+            "chainId": self._resolve_chain_id(),
+            "verifyingContract": self._resolve_verifying_contract()
         }
         types_schema = {
             "VerifyAndMint": [
@@ -74,7 +90,7 @@ class GeminiOracleService:
         
         signable_message = encode_typed_data(domain_data=domain, message_types=types_schema, message_data=message)
         signed_message = self.account.sign_message(signable_message)
-        return signed_message.signature.hex()
+        return "0x" + signed_message.signature.hex()
 
     def process_submission(self, photo_bytes: bytes, ngo_task: str, user_address: str) -> dict:
         # OWASP ASI Broken Logic Mitigation: Prevent identical image reuse
