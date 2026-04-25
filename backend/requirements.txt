@@ -7,3 +7,5 @@ python-multipart
 pillow
 slowapi
 google-cloud-secret-manager
+pytest
+pytest-asyncio
