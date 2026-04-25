@@ -1,0 +1,20 @@
+[
+  {
+    "id": "task_1",
+    "title": "Beach Cleanup Drive",
+    "category": "Environment",
+    "location": "Mumbai",
+    "status": "Active",
+    "tokenReward": 20,
+    "assignedVolunteers": 8
+  },
+  {
+    "id": "task_2",
+    "title": "After-school Tutoring",
+    "category": "Education",
+    "location": "Delhi",
+    "status": "Completed",
+    "tokenReward": 15,
+    "assignedVolunteers": 6
+  }
+]

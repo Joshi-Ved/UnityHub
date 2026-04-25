@@ -1,0 +1,18 @@
+{
+  "organization": "UnityHub Foundation",
+  "dateRange": "2026-01-01 to 2026-03-31",
+  "executiveSummary": "847 Verified Hours of Social Impact",
+  "proofRows": [
+    {
+      "task": "Beach Cleanup",
+      "volunteer": "Rahul",
+      "timestamp": "2026-03-12T10:10:00Z",
+      "polygonTxHash": "0x1a2b3c4d5e6f7g8h9f0e"
+    }
+  ],
+  "aiVerification": {
+    "approvalRate": 88,
+    "autoApproved": 422,
+    "flagged": 57
+  }
+}

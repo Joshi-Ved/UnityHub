@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "flutter build apk mobile",
+			"type": "shell",
+			"command": "cd frontend/mobile; flutter build apk",
+			"isBackground": false
+		},
+		{
+			"label": "flutter build apk with log",
+			"type": "shell",
+			"command": "cd frontend/mobile; flutter build apk *> apk_build.log; if ($LASTEXITCODE -eq 0) { Write-Output \"APK_BUILD_OK\" } else { Write-Output \"APK_BUILD_FAIL:$LASTEXITCODE\" }",
+			"isBackground": false
+		}
+	]
+}
