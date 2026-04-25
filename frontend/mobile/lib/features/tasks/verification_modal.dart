@@ -6,12 +6,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
 import 'package:unityhub_mobile/features/map/map_view_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:unityhub_mobile/core/config/constants.dart';
 
 // State Enum
 enum VerificationStep { capture, verifying, result }
 
 final verificationStepProvider = StateProvider<VerificationStep>((ref) => VerificationStep.capture);
 final verificationResultProvider = StateProvider<bool?>((ref) => null);
+final verificationReasonProvider = StateProvider<String?>((ref) => null);
+final verificationTxHashProvider = StateProvider<String?>((ref) => null);
 
 class VerificationModal extends ConsumerStatefulWidget {
   const VerificationModal({super.key});
@@ -47,15 +52,45 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
     super.dispose();
   }
 
-  Future<void> _simulateVerification() async {
+  Future<void> _verifyImpact() async {
+    final task = ref.read(selectedTaskProvider);
     ref.read(verificationStepProvider.notifier).state = VerificationStep.verifying;
     
-    // Simulate AI API call
-    await Future.delayed(const Duration(seconds: 4));
+    try {
+      final uri = Uri.parse('${AppConstants.apiBaseUrl}/verify-impact');
+      var request = http.MultipartRequest('POST', uri);
+      
+      // Add form fields
+      request.fields['ngo_task'] = task?.title ?? 'Unknown Task';
+      request.fields['user_address'] = '0x0000000000000000000000000000000000000000'; // Replace with real address if auth context exists
+      
+      // Add file
+      if (kIsWeb && _webPickedImage != null) {
+        final bytes = await _webPickedImage!.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes('photo', bytes, filename: 'proof.jpg'));
+      } else if (_cameraController != null) {
+        final xFile = await _cameraController!.takePicture();
+        final bytes = await xFile.readAsBytes();
+        request.files.add(http.MultipartFile.fromBytes('photo', bytes, filename: 'proof.jpg'));
+      }
+      
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        ref.read(verificationResultProvider.notifier).state = data['success'] ?? false;
+        ref.read(verificationReasonProvider.notifier).state = data['message'];
+        ref.read(verificationTxHashProvider.notifier).state = data['signature']; // Displaying signature or hash
+      } else {
+        ref.read(verificationResultProvider.notifier).state = false;
+        ref.read(verificationReasonProvider.notifier).state = 'Server error: ${response.statusCode}';
+      }
+    } catch (e) {
+      ref.read(verificationResultProvider.notifier).state = false;
+      ref.read(verificationReasonProvider.notifier).state = 'Connection failed: $e';
+    }
     
-    // 80% chance of success for demo
-    final success = DateTime.now().second % 5 != 0;
-    ref.read(verificationResultProvider.notifier).state = success;
     ref.read(verificationStepProvider.notifier).state = VerificationStep.result;
   }
 
@@ -124,7 +159,7 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _webPickedImage == null ? null : _simulateVerification,
+                onPressed: _webPickedImage == null ? null : _verifyImpact,
                 child: const Text('Upload & Verify'),
               ),
             ],
@@ -198,8 +233,7 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
           right: 24,
           child: ElevatedButton(
             onPressed: () async {
-              // await _cameraController!.takePicture();
-              _simulateVerification();
+              _verifyImpact();
             },
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -260,9 +294,9 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
                 style: const TextStyle(color: AppColors.primary200, fontSize: 16),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Polygon Tx: 0x123...abc9',
-                style: TextStyle(color: Colors.grey, fontSize: 12),
+              Text(
+                'Polygon Tx: ${ref.watch(verificationTxHashProvider)?.substring(0, 15) ?? "0x123..."}...',
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
@@ -270,10 +304,10 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
                 child: const Text('Back to Map'),
               ),
             ] else ...[
-              const Text(
-                'Gemini Reason: Photo unclear — retake from 1m distance.',
+              Text(
+                'Gemini Reason: ${ref.watch(verificationReasonProvider) ?? "Photo unclear"}',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
