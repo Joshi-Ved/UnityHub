@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
-import 'package:unityhub_mobile/features/map/map_view_model.dart';
+import 'package:unityhub_mobile/features/admin/data/admin_api.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unityhub_mobile/shared/widgets/adaptive/async_state_widgets.dart';
+
+final adminTasksProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  return ref.read(adminApiProvider).fetchTasks();
+});
 
 class AdminTasksScreen extends ConsumerStatefulWidget {
   const AdminTasksScreen({super.key});
@@ -31,7 +35,7 @@ class _AdminTasksScreenState extends ConsumerState<AdminTasksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tasks = ref.watch(mapTasksProvider);
+    final tasksAsync = ref.watch(adminTasksProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,170 +62,154 @@ class _AdminTasksScreenState extends ConsumerState<AdminTasksScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            if (tasks.isEmpty)
-              const AppEmptyState(
-                title: 'No tasks yet',
-                message: 'Create the first task to start volunteer verification.',
-              )
-            else
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isCompact = constraints.maxWidth < 900;
-                  return isCompact
-                      ? Column(
-                          children: tasks
-                              .map((task) => Card(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    child: ListTile(
-                                      title: Text(task.title),
-                                      subtitle: Text('${task.ngoName} • ${task.tokenReward} VIT'),
-                                      trailing: _statusBadge(task.status),
-                                      onTap: () => _showVerificationLogs(context, task),
-                                    ),
-                                  ))
-                              .toList(),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.neutral200),
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columns: const [
-                                DataColumn(label: Text('Title')),
-                                DataColumn(label: Text('Status')),
-                                DataColumn(label: Text('NGO')),
-                                DataColumn(label: Text('Reward')),
-                                DataColumn(label: Text('Actions')),
-                              ],
-                              rows: tasks.map((task) {
-                                return DataRow(
-                                  cells: [
-                                    DataCell(Text(task.title)),
-                                    DataCell(_statusBadge(task.status)),
-                                    DataCell(Text(task.ngoName)),
-                                    DataCell(Text('${task.tokenReward} VIT')),
-                                    DataCell(
-                                      TextButton(
-                                        onPressed: () => _showVerificationLogs(context, task),
-                                        child: const Text('View Logs'),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        );
-                },
+            tasksAsync.when(
+              loading: () => const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: CircularProgressIndicator(),
+              )),
+              error: (error, stack) => Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text('Failed to load tasks: $error'),
               ),
+              data: (tasks) {
+                if (tasks.isEmpty) {
+                  return const AppEmptyState(
+                    title: 'No tasks yet',
+                    message: 'Create the first task to start volunteer verification.',
+                  );
+                }
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = constraints.maxWidth < 900;
+                    return isCompact
+                        ? Column(
+                            children: tasks.map((task) {
+                              final status = task['status']?.toString() ?? 'available';
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: ListTile(
+                                  title: Text(task['title']?.toString() ?? 'Untitled'),
+                                  subtitle: Text('${task['ngo_name'] ?? 'NGO'} • ${task['token_reward'] ?? 0} VIT'),
+                                  trailing: _statusBadge(status),
+                                  onTap: () => _showTaskLogs(context, task['id']?.toString() ?? ''),
+                                ),
+                              );
+                            }).toList(),
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.neutral200),
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DataTable(
+                                columns: const [
+                                  DataColumn(label: Text('Title')),
+                                  DataColumn(label: Text('Status')),
+                                  DataColumn(label: Text('NGO')),
+                                  DataColumn(label: Text('Reward')),
+                                  DataColumn(label: Text('Actions')),
+                                ],
+                                rows: tasks.map((task) {
+                                  final status = task['status']?.toString() ?? 'available';
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(task['title']?.toString() ?? 'Untitled')),
+                                      DataCell(_statusBadge(status)),
+                                      DataCell(Text(task['ngo_name']?.toString() ?? 'NGO')),
+                                      DataCell(Text('${task['token_reward'] ?? 0} VIT')),
+                                      DataCell(
+                                        TextButton(
+                                          onPressed: () => _showTaskLogs(context, task['id']?.toString() ?? ''),
+                                          child: const Text('View Logs'),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
 
-  /// Shows a bottom sheet with mock Gemini verification logs for the selected task.
-  void _showVerificationLogs(BuildContext context, VolunteerTask task) {
-    final mockLogs = [
-      {'volunteer': 'Rahul M.', 'score': '94%', 'status': 'Approved', 'time': '2h ago', 'fraud': false},
-      {'volunteer': 'Sneha P.', 'score': '91%', 'status': 'Approved', 'time': '4h ago', 'fraud': false},
-      {'volunteer': 'Anon User', 'score': '22%', 'status': 'Rejected', 'time': '5h ago', 'fraud': true},
-    ];
+  void _showTaskLogs(BuildContext context, String taskId) async {
+    try {
+      final logs = await ref.read(adminApiProvider).fetchTaskLogs(taskId);
+      if (!context.mounted) return;
 
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      isScrollControlled: true,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.55,
-          maxChildSize: 0.85,
-          builder: (context, scrollController) {
-            return Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Verification Logs — ${task.title}',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        isScrollControlled: true,
+        builder: (context) {
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.55,
+            maxChildSize: 0.85,
+            builder: (context, scrollController) {
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Task Logs',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text('Powered by Gemini Vision AI', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                  const Divider(height: 24),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: mockLogs.length,
-                      itemBuilder: (context, index) {
-                        final log = mockLogs[index];
-                        final approved = log['status'] == 'Approved';
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: approved ? AppColors.primary100 : AppColors.error.withOpacity(0.15),
-                              child: Icon(
-                                approved ? Icons.check : Icons.close,
-                                color: approved ? AppColors.primary600 : AppColors.error,
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('Powered by Gemini Vision AI', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    const Divider(height: 24),
+                    Expanded(
+                      child: logs.isEmpty
+                        ? const Center(child: Text('No logs available for this task yet.'))
+                        : ListView.separated(
+                            controller: scrollController,
+                            itemCount: logs.length,
+                            separatorBuilder: (_, __) => const Divider(height: 16),
+                            itemBuilder: (context, index) => ListTile(
+                              leading: const CircleAvatar(
+                                backgroundColor: AppColors.primary100,
+                                child: Icon(Icons.info_outline, color: AppColors.primary600),
                               ),
-                            ),
-                            title: Text(log['volunteer'].toString()),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Gemini Score: ${log['score']} · ${log['time']}'),
-                                if (log['fraud'] as bool)
-                                  const Text(
-                                    '⚠️ Fraud detected: image appears to be a screenshot',
-                                    style: TextStyle(color: AppColors.error, fontSize: 11),
-                                  ),
-                              ],
-                            ),
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: approved ? AppColors.primary100 : AppColors.error.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                log['status'].toString(),
-                                style: TextStyle(
-                                  color: approved ? AppColors.primary700 : AppColors.error,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
+                              title: Text(logs[index]),
                             ),
                           ),
-                        );
-                      },
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load logs: $error')),
+      );
+    }
   }
 
   Widget _statusBadge(String status) {
@@ -244,7 +232,6 @@ class _AdminTasksScreenState extends ConsumerState<AdminTasksScreen> {
   }
 
   void _showCreateTaskModal(BuildContext context) {
-    // Clear controllers before showing
     _titleController.clear();
     _descriptionController.clear();
     _rewardController.text = '20';
@@ -294,24 +281,34 @@ class _AdminTasksScreenState extends ConsumerState<AdminTasksScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final title = _titleController.text.trim();
-                if (title.isEmpty) {
+                try {
+                  final title = _titleController.text.trim();
+                  if (title.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Task title is required')),
+                    );
+                    return;
+                  }
+                  final reward = int.tryParse(_rewardController.text.trim()) ?? 0;
+                  await ref.read(adminApiProvider).createTask(
+                        title: title,
+                        description: _descriptionController.text.trim(),
+                        tokenReward: reward,
+                        verificationCriteria: _criteriaController.text.trim(),
+                      );
+
+                  ref.invalidate(adminTasksProvider);
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Task title is required')),
+                    const SnackBar(content: Text('Task created successfully!')),
                   );
-                  return;
+                } catch (error) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Task creation failed: $error')),
+                  );
                 }
-                // Add the new task to the local notifier state
-                await ref.read(mapTasksProvider.notifier).addLocalTask(
-                  title: title,
-                  description: _descriptionController.text.trim(),
-                  reward: int.tryParse(_rewardController.text) ?? 20,
-                  criteria: _criteriaController.text.trim(),
-                );
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Task "$title" created successfully!')),
-                );
               },
               child: const Text('Create'),
             ),

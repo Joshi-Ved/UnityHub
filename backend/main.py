@@ -13,6 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from routes.impact import router as impact_router
 from routes.digilocker import router as digilocker_router
 from routes.tasks import router as tasks_router
+from routes.admin import router as admin_router
 from core_limiter import limiter
 from database import engine
 from models import Base
@@ -139,6 +140,7 @@ async def add_security_headers(request: Request, call_next):
 app.include_router(impact_router)
 app.include_router(digilocker_router)
 app.include_router(tasks_router)
+app.include_router(admin_router)
 
 
 @app.on_event("startup")

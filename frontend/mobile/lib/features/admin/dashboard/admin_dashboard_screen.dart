@@ -11,9 +11,25 @@ class AdminDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(dashboardStatsProvider);
-    final activityLogs = ref.watch(activityFeedProvider);
-    final topVolunteers = ref.watch(topVolunteersProvider);
+    final dashboardAsync = ref.watch(adminDashboardProvider);
+
+    return dashboardAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        appBar: AppBar(title: const Text('NGO Analytics Dashboard')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text('Failed to load dashboard: $error', textAlign: TextAlign.center),
+          ),
+        ),
+      ),
+      data: (dashboardData) {
+        final stats = dashboardData.stats;
+        final activityLogs = dashboardData.activity;
+        final topVolunteers = dashboardData.leaderboard;
 
     return Scaffold(
       appBar: AppBar(
@@ -21,12 +37,12 @@ class AdminDashboardScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.manage_search),
-            onPressed: () => context.go(AppRoutes.adminTasks),
+            onPressed: () => context.go('/admin/tasks'),
             tooltip: 'Task Management',
           ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () => context.go(AppRoutes.adminReports),
+            onPressed: () => context.go('/admin/reports'),
             tooltip: 'ESG Reports',
           ),
         ],
@@ -50,71 +66,73 @@ class AdminDashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 32),
             
-            // Funnel Chart
-            Text('Verification Funnel', style: Theme.of(context).textTheme.headlineLarge),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  barGroups: [
-                    BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 100, color: AppColors.primary200, width: 30)]),
-                    BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 80, color: AppColors.primary400, width: 30)]),
-                    BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 70, color: AppColors.primary500, width: 30)]),
-                    BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 65, color: AppColors.primary700, width: 30)]),
-                  ],
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          const titles = ['Submitted', 'AI Processed', 'Approved', 'Minted'];
-                          final index = value.toInt();
-                          if (index < 0 || index >= titles.length) return const SizedBox.shrink();
-                          return Text(titles[index], style: const TextStyle(fontSize: 10));
-                        },
+                // Funnel Chart
+                Text('Verification Funnel', style: Theme.of(context).textTheme.headlineLarge),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 200,
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      barGroups: [
+                        BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 100, color: AppColors.primary200, width: 30)]),
+                        BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 80, color: AppColors.primary400, width: 30)]),
+                        BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 70, color: AppColors.primary500, width: 30)]),
+                        BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 65, color: AppColors.primary700, width: 30)]),
+                      ],
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              const titles = ['Submitted', 'AI Processed', 'Approved', 'Minted'];
+                              final index = value.toInt();
+                              if (index < 0 || index >= titles.length) return const SizedBox.shrink();
+                              return Text(titles[index], style: const TextStyle(fontSize: 10));
+                            },
+                          ),
+                        ),
+                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
+                      borderData: FlBorderData(show: false),
+                      gridData: const FlGridData(show: false),
                     ),
-                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-                  borderData: FlBorderData(show: false),
-                  gridData: const FlGridData(show: false),
                 ),
-              ),
-            ),
-            const SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-            // Live Activity Feed & Leaderboard
-            LayoutBuilder(
-              builder: (context, constraints) {
-                // Responsive layout for wide vs narrow screens
-                if (constraints.maxWidth > 800) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: _buildActivityFeed(context, activityLogs)),
-                      const SizedBox(width: 24),
-                      Expanded(child: _buildLeaderboard(context, topVolunteers)),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    children: [
-                      _buildActivityFeed(context, activityLogs),
-                      const SizedBox(height: 24),
-                      _buildLeaderboard(context, topVolunteers),
-                    ],
-                  );
-                }
-              },
-            )
-          ],
-        ),
-      ),
+                // Live Activity Feed & Leaderboard
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Responsive layout for wide vs narrow screens
+                    if (constraints.maxWidth > 800) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildActivityFeed(context, activityLogs)),
+                          const SizedBox(width: 24),
+                          Expanded(child: _buildLeaderboard(context, topVolunteers)),
+                        ],
+                      );
+                    } else {
+                      return Column(
+                        children: [
+                          _buildActivityFeed(context, activityLogs),
+                          const SizedBox(height: 24),
+                          _buildLeaderboard(context, topVolunteers),
+                        ],
+                      );
+                    }
+                  },
+                )
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

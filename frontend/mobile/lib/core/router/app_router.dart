@@ -35,13 +35,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       if (location == AppRoutes.splash) {
         if (authState == UserRole.none) return null;
         if (authState == UserRole.volunteer) return AppRoutes.volunteerMap;
-        if (authState == UserRole.ngo) return AppRoutes.ngoDashboard;
+        if (authState == UserRole.ngo) return AppRoutes.adminDashboard; // Stashed changes wanted admin dashboard for NGO
         return AppRoutes.sponsorDashboard;
       }
 
       if (authState == UserRole.none) {
         if (isAuthRoute || location == AppRoutes.splash) return null;
-        if (location.startsWith(AppRoutes.ngoPrefix) || location.startsWith(AppRoutes.sponsorPrefix)) {
+        if (location.startsWith(AppRoutes.ngoPrefix) || location.startsWith(AppRoutes.adminPrefix) || location.startsWith(AppRoutes.sponsorPrefix)) {
           return AppRoutes.authNgo;
         }
         return AppRoutes.authVolunteer;
@@ -49,17 +49,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       if (isAuthRoute) {
         if (authState == UserRole.volunteer) return AppRoutes.volunteerMap;
-        if (authState == UserRole.ngo) return AppRoutes.ngoDashboard;
+        if (authState == UserRole.ngo) return AppRoutes.adminDashboard;
         return AppRoutes.sponsorDashboard;
       }
 
-      if (authState == UserRole.volunteer && location.startsWith(AppRoutes.ngoPrefix)) {
+      if (authState == UserRole.volunteer && (location.startsWith(AppRoutes.ngoPrefix) || location.startsWith(AppRoutes.adminPrefix))) {
         return AppRoutes.volunteerMap;
       }
-      if (authState == UserRole.ngo && location.startsWith(AppRoutes.volunteerPrefix)) {
-        return AppRoutes.ngoDashboard;
+      if (authState == UserRole.ngo && (location.startsWith(AppRoutes.volunteerPrefix) || location.startsWith(AppRoutes.sponsorPrefix))) {
+        return AppRoutes.adminDashboard;
       }
-      if (authState == UserRole.sponsor && location.startsWith(AppRoutes.volunteerPrefix)) {
+      if (authState == UserRole.sponsor && (location.startsWith(AppRoutes.volunteerPrefix) || location.startsWith(AppRoutes.ngoPrefix) || location.startsWith(AppRoutes.adminPrefix))) {
         return AppRoutes.sponsorDashboard;
       }
 
