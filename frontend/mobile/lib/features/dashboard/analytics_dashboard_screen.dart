@@ -62,6 +62,27 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Sample data notice — remove when live data is wired
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.primary50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.primary200, width: 1),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline, size: 16, color: AppColors.primary700),
+              SizedBox(width: 6),
+              Text(
+                'Sample data — live metrics will be pulled from on-chain events',
+                style: TextStyle(fontSize: 12, color: AppColors.primary700, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -126,9 +147,26 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Verification Funnel',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Verification Funnel',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Sample data',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -179,7 +217,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       barRods: [
                         BarChartRodData(
                           toY: 100,
-                          color: const Color(0xFFF59E0B),
+                          color: AppColors.warning,
                           width: 30,
                         ),
                       ],
@@ -189,7 +227,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       barRods: [
                         BarChartRodData(
                           toY: 79,
-                          color: const Color(0xFFF59E0B),
+                          color: AppColors.warning,
                           width: 30,
                         ),
                       ],
@@ -296,7 +334,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFE6F9F1), Color(0xFFC7F2E2)],
+                  colors: [AppColors.primary50, AppColors.primary100],
                 ),
               ),
               alignment: Alignment.center,

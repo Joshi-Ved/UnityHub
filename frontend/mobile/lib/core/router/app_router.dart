@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/responsive/layout_builder.dart';
 import 'package:unityhub_mobile/features/map/map_screen.dart';
 import 'package:unityhub_mobile/features/wallet/wallet_screen.dart';
@@ -9,11 +10,13 @@ import 'package:unityhub_mobile/features/auth/splash_screen.dart';
 import 'package:unityhub_mobile/features/tasks/task_list_screen.dart';
 import 'package:unityhub_mobile/features/tasks/verification_modal.dart';
 import 'package:unityhub_mobile/features/profile/volunteer_profile_screen.dart';
-
 import 'package:unityhub_mobile/features/dashboard/analytics_dashboard_screen.dart';
 import 'package:unityhub_mobile/features/dashboard/volunteer_directory_screen.dart';
 import 'package:unityhub_mobile/features/task_management/task_management_screen.dart';
 import 'package:unityhub_mobile/features/esg_reports/esg_report_generator_screen.dart';
+import 'package:unityhub_mobile/features/admin/dashboard/admin_dashboard_screen.dart';
+import 'package:unityhub_mobile/features/admin/tasks/admin_tasks_screen.dart';
+import 'package:unityhub_mobile/features/admin/reports/admin_reports_screen.dart';
 
 // Dummy Auth State
 enum UserRole { none, volunteer, ngo, sponsor }
@@ -27,37 +30,37 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     redirect: (context, state) {
       final location = state.matchedLocation;
-      final isAuthRoute = location.startsWith('/auth');
+      final isAuthRoute = location.startsWith(AppRoutes.authPrefix);
 
-      if (location == '/') {
+      if (location == AppRoutes.splash) {
         if (authState == UserRole.none) return null;
-        if (authState == UserRole.volunteer) return '/volunteer/map';
-        if (authState == UserRole.ngo) return '/ngo/dashboard';
-        return '/sponsor/dashboard';
+        if (authState == UserRole.volunteer) return AppRoutes.volunteerMap;
+        if (authState == UserRole.ngo) return AppRoutes.ngoDashboard;
+        return AppRoutes.sponsorDashboard;
       }
 
       if (authState == UserRole.none) {
-        if (isAuthRoute || location == '/') return null;
-        if (location.startsWith('/ngo') || location.startsWith('/sponsor')) {
-          return '/auth/ngo';
+        if (isAuthRoute || location == AppRoutes.splash) return null;
+        if (location.startsWith(AppRoutes.ngoPrefix) || location.startsWith(AppRoutes.sponsorPrefix)) {
+          return AppRoutes.authNgo;
         }
-        return '/auth/volunteer';
+        return AppRoutes.authVolunteer;
       }
 
       if (isAuthRoute) {
-        if (authState == UserRole.volunteer) return '/volunteer/map';
-        if (authState == UserRole.ngo) return '/ngo/dashboard';
-        return '/sponsor/dashboard';
+        if (authState == UserRole.volunteer) return AppRoutes.volunteerMap;
+        if (authState == UserRole.ngo) return AppRoutes.ngoDashboard;
+        return AppRoutes.sponsorDashboard;
       }
 
-      if (authState == UserRole.volunteer && location.startsWith('/ngo')) {
-        return '/volunteer/map';
+      if (authState == UserRole.volunteer && location.startsWith(AppRoutes.ngoPrefix)) {
+        return AppRoutes.volunteerMap;
       }
-      if (authState == UserRole.ngo && location.startsWith('/volunteer')) {
-        return '/ngo/dashboard';
+      if (authState == UserRole.ngo && location.startsWith(AppRoutes.volunteerPrefix)) {
+        return AppRoutes.ngoDashboard;
       }
-      if (authState == UserRole.sponsor && location.startsWith('/volunteer')) {
-        return '/sponsor/dashboard';
+      if (authState == UserRole.sponsor && location.startsWith(AppRoutes.volunteerPrefix)) {
+        return AppRoutes.sponsorDashboard;
       }
 
       return null;
@@ -68,16 +71,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
-        path: '/auth/volunteer',
+        path: AppRoutes.authVolunteer,
         builder: (context, state) => const AuthScreen(role: UserRole.volunteer),
       ),
       GoRoute(
-        path: '/auth/ngo',
+        path: AppRoutes.authNgo,
         builder: (context, state) => const AuthScreen(role: UserRole.ngo),
       ),
 
       GoRoute(
-        path: '/volunteer/map',
+        path: AppRoutes.volunteerMap,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'volunteer',
           currentLocation: state.matchedLocation,
@@ -85,7 +88,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/volunteer/tasks',
+        path: AppRoutes.volunteerTasks,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'volunteer',
           currentLocation: state.matchedLocation,
@@ -93,7 +96,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/volunteer/verify/:id',
+        path: '${AppRoutes.volunteerVerifyBase}/:id',
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'volunteer',
           currentLocation: state.matchedLocation,
@@ -101,7 +104,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/volunteer/wallet',
+        path: AppRoutes.volunteerWallet,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'volunteer',
           currentLocation: state.matchedLocation,
@@ -109,7 +112,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/volunteer/profile',
+        path: AppRoutes.volunteerProfile,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'volunteer',
           currentLocation: state.matchedLocation,
@@ -118,7 +121,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
-        path: '/ngo/dashboard',
+        path: AppRoutes.ngoDashboard,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'ngo',
           currentLocation: state.matchedLocation,
@@ -126,7 +129,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/ngo/tasks',
+        path: AppRoutes.ngoTasks,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'ngo',
           currentLocation: state.matchedLocation,
@@ -134,7 +137,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/ngo/volunteers',
+        path: AppRoutes.ngoVolunteers,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'ngo',
           currentLocation: state.matchedLocation,
@@ -142,7 +145,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/ngo/reports',
+        path: AppRoutes.ngoReports,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'ngo',
           currentLocation: state.matchedLocation,
@@ -151,11 +154,37 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
-        path: '/sponsor/dashboard',
+        path: AppRoutes.sponsorDashboard,
         builder: (context, state) => AdaptiveLayout(
           roleScope: 'sponsor',
           currentLocation: state.matchedLocation,
           child: const AnalyticsDashboardScreen(),
+        ),
+      ),
+
+      // Admin routes — previously scaffolded but unreachable; now wired
+      GoRoute(
+        path: AppRoutes.adminDashboard,
+        builder: (context, state) => AdaptiveLayout(
+          roleScope: 'ngo',
+          currentLocation: state.matchedLocation,
+          child: const AdminDashboardScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.adminTasks,
+        builder: (context, state) => AdaptiveLayout(
+          roleScope: 'ngo',
+          currentLocation: state.matchedLocation,
+          child: const AdminTasksScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.adminReports,
+        builder: (context, state) => AdaptiveLayout(
+          roleScope: 'ngo',
+          currentLocation: state.matchedLocation,
+          child: const AdminReportsScreen(),
         ),
       ),
     ],

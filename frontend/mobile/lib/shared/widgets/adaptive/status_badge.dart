@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unityhub_mobile/core/theme/theme.dart';
 
 class StatusBadge extends StatelessWidget {
   const StatusBadge({super.key, required this.status});
@@ -14,24 +15,24 @@ class StatusBadge extends StatelessWidget {
     switch (normalized) {
       case 'verified':
       case 'approved':
-        background = const Color(0xFF10B981);
-        foreground = Colors.white;
+        background = AppColors.success;
+        foreground = AppColors.textInverse;
         break;
       case 'pending':
-        background = const Color(0xFFF59E0B);
-        foreground = Colors.white;
+        background = AppColors.warning;
+        foreground = AppColors.textInverse;
         break;
       case 'rejected':
-        background = const Color(0xFFEF4444);
-        foreground = Colors.white;
+        background = AppColors.error;
+        foreground = AppColors.textInverse;
         break;
       case 'flagged':
-        background = const Color(0xFFF97316);
-        foreground = Colors.white;
+        background = AppColors.warning;
+        foreground = AppColors.textInverse;
         break;
       default:
-        background = const Color(0xFFE5E7EB);
-        foreground = const Color(0xFF111827);
+        background = AppColors.neutral200;
+        foreground = AppColors.textPrimary;
     }
 
     return Container(

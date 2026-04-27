@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
+import 'package:unityhub_mobile/core/config/session.dart';
 import 'package:unityhub_mobile/features/wallet/wallet_view_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:unityhub_mobile/shared/widgets/adaptive/async_state_widgets.dart';
 
-class WalletScreen extends ConsumerWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends ConsumerState<WalletScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load wallet data on first mount using the active session address
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(walletProvider.notifier).loadWalletData(
+        DemoSession.demoWalletAddress,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final walletState = ref.watch(walletProvider);
 
     return Scaffold(
@@ -17,34 +35,58 @@ class WalletScreen extends ConsumerWidget {
         title: const Text('Impact Wallet'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/volunteer/map'),
+          onPressed: () => context.go(AppRoutes.volunteerMap),
         ),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final useGrid = kIsWeb && constraints.maxWidth >= 900;
+      body: Builder(builder: (context) {
+        // Loading state
+        if (walletState.isLoading) {
+          return const AppLoadingState(message: 'Loading wallet data...');
+        }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildScoreCard(context, walletState),
-                const SizedBox(height: 24),
-                Text('Badge Shelf', style: Theme.of(context).textTheme.headlineLarge),
-                const SizedBox(height: 16),
-                _buildBadgeShelf(),
-                const SizedBox(height: 32),
-                Text('Transaction History', style: Theme.of(context).textTheme.headlineLarge),
-                const SizedBox(height: 16),
-                useGrid
-                    ? _buildTransactionGrid(walletState.transactions)
-                    : _buildTransactionList(walletState.transactions),
-              ],
-            ),
+        // Error state
+        if (walletState.error != null) {
+          return AppErrorState(
+            title: 'Could not load wallet',
+            message: 'Check your connection and try again.',
+            onRetry: () => ref.read(walletProvider.notifier).loadWalletData(
+                  DemoSession.demoWalletAddress,
+                ),
           );
-        },
-      ),
+        }
+        if (walletState.transactions.isEmpty) {
+          return const AppEmptyState(
+            title: 'No wallet activity yet',
+            message: 'Complete a task and verify impact to see VIT transactions.',
+          );
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final useGrid = constraints.maxWidth >= 900;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildScoreCard(context, walletState),
+                  const SizedBox(height: 24),
+                  Text('Badge Shelf', style: Theme.of(context).textTheme.headlineLarge),
+                  const SizedBox(height: 16),
+                  _buildBadgeShelf(),
+                  const SizedBox(height: 32),
+                  Text('Transaction History', style: Theme.of(context).textTheme.headlineLarge),
+                  const SizedBox(height: 16),
+                  useGrid
+                      ? _buildTransactionGrid(walletState.transactions)
+                      : _buildTransactionList(walletState.transactions),
+                ],
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 
@@ -61,11 +103,11 @@ class WalletScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 16)),
+              const Text('Total Balance', style: TextStyle(color: AppColors.primary100, fontSize: 16)),
               const SizedBox(height: 8),
               Text(
                 '${state.totalVit} VIT',
-                style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: AppColors.textInverse, fontSize: 36, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -78,13 +120,13 @@ class WalletScreen extends ConsumerWidget {
                 CircularProgressIndicator(
                   value: state.impactScore,
                   strokeWidth: 8,
-                  backgroundColor: Colors.white24,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  backgroundColor: AppColors.primary400,
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.textInverse),
                 ),
                 Center(
                   child: Text(
                     '${(state.impactScore * 100).toInt()}%',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: AppColors.textInverse, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

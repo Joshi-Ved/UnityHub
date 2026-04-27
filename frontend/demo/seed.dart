@@ -1,6 +1,16 @@
+// ignore: depend_on_referenced_packages
+import 'package:flutter/foundation.dart';
+
 void main() {
+  // SAFETY GUARD: Never populate demo state in production or testnet builds.
+  // This script must only run during local development and CI demo runs.
+  if (!kDebugMode) {
+    print("[SEED] Skipped: seed.dart must not run outside kDebugMode.");
+    return;
+  }
+
   print("========================================");
-  print("UNITYHUB DUAL-PLATFORM DEMO SEED SCRIPT");
+  print("[DEBUG ONLY] UNITYHUB DEMO SEED SCRIPT");
   print("========================================");
   
   print("1. Pre-loading realistic tasks and volunteer map fixtures...");

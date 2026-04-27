@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
 import 'package:unityhub_mobile/shared/widgets/web/side_nav_item.dart';
 
@@ -24,14 +25,17 @@ class AdaptiveLayout extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
-        final forceDesktop = roleScope == 'ngo' || roleScope == 'sponsor';
-        final forceMobile = roleScope == 'volunteer';
+        final isVolunteer = roleScope == 'volunteer';
+        final isAdminPortal = roleScope == 'ngo' || roleScope == 'sponsor';
 
-        if (forceDesktop) {
-          return _DesktopScaffold(currentLocation: currentLocation, child: child);
-        }
-        if (forceMobile) {
+        if (isVolunteer) {
           return _MobileScaffold(currentLocation: currentLocation, child: child);
+        }
+        if (isAdminPortal && maxWidth < kDesktopBreakpoint) {
+          return _CompactPortalScaffold(currentLocation: currentLocation, child: child);
+        }
+        if (isAdminPortal) {
+          return _DesktopScaffold(currentLocation: currentLocation, child: child);
         }
 
         if (maxWidth < kMobileBreakpoint) {
@@ -72,18 +76,18 @@ class _MobileScaffold extends StatelessWidget {
   }
 
   int _mobileIndex(String location) {
-    if (location.startsWith('/volunteer/tasks')) return 1;
-    if (location.startsWith('/volunteer/wallet')) return 2;
-    if (location.startsWith('/volunteer/profile')) return 3;
+    if (location.startsWith(AppRoutes.volunteerTasks)) return 1;
+    if (location.startsWith(AppRoutes.volunteerWallet)) return 2;
+    if (location.startsWith(AppRoutes.volunteerProfile)) return 3;
     return 0;
   }
 
   void _onVolunteerTabTap(BuildContext context, int index) {
     const routes = [
-      '/volunteer/map',
-      '/volunteer/tasks',
-      '/volunteer/wallet',
-      '/volunteer/profile',
+      AppRoutes.volunteerMap,
+      AppRoutes.volunteerTasks,
+      AppRoutes.volunteerWallet,
+      AppRoutes.volunteerProfile,
     ];
     context.go(routes[index]);
   }
@@ -119,18 +123,18 @@ class _TabletScaffold extends StatelessWidget {
   }
 
   int _mobileIndex(String location) {
-    if (location.startsWith('/volunteer/tasks')) return 1;
-    if (location.startsWith('/volunteer/wallet')) return 2;
-    if (location.startsWith('/volunteer/profile')) return 3;
+    if (location.startsWith(AppRoutes.volunteerTasks)) return 1;
+    if (location.startsWith(AppRoutes.volunteerWallet)) return 2;
+    if (location.startsWith(AppRoutes.volunteerProfile)) return 3;
     return 0;
   }
 
   void _onVolunteerTabTap(BuildContext context, int index) {
     const routes = [
-      '/volunteer/map',
-      '/volunteer/tasks',
-      '/volunteer/wallet',
-      '/volunteer/profile',
+      AppRoutes.volunteerMap,
+      AppRoutes.volunteerTasks,
+      AppRoutes.volunteerWallet,
+      AppRoutes.volunteerProfile,
     ];
     context.go(routes[index]);
   }
@@ -145,10 +149,10 @@ class _DesktopScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      (Icons.space_dashboard_rounded, 'Dashboard', '/ngo/dashboard'),
-      (Icons.assignment_turned_in_outlined, 'Tasks', '/ngo/tasks'),
-      (Icons.groups_2_outlined, 'Volunteers', '/ngo/volunteers'),
-      (Icons.summarize_outlined, 'Reports', '/ngo/reports'),
+      (Icons.space_dashboard_rounded, 'Dashboard', AppRoutes.ngoDashboard),
+      (Icons.assignment_turned_in_outlined, 'Tasks', AppRoutes.ngoTasks),
+      (Icons.groups_2_outlined, 'Volunteers', AppRoutes.ngoVolunteers),
+      (Icons.summarize_outlined, 'Reports', AppRoutes.ngoReports),
     ];
 
     return Scaffold(
@@ -177,7 +181,7 @@ class _DesktopScaffold extends StatelessWidget {
                   ),
                 const Spacer(),
                 OutlinedButton.icon(
-                  onPressed: () => context.go('/auth/ngo'),
+                  onPressed: () => context.go(AppRoutes.authNgo),
                   icon: const Icon(Icons.logout),
                   label: const Text('Logout'),
                 ),
@@ -191,7 +195,7 @@ class _DesktopScaffold extends StatelessWidget {
                   automaticallyImplyLeading: false,
                   title: Row(
                     children: const [
-                      FlutterLogo(size: 20),
+                      Icon(Icons.hub_rounded, size: 20, color: AppColors.primary500),
                       SizedBox(width: 8),
                       Text('NGO Portal'),
                     ],
@@ -220,6 +224,68 @@ class _DesktopScaffold extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CompactPortalScaffold extends StatelessWidget {
+  const _CompactPortalScaffold({required this.currentLocation, required this.child});
+
+  final String currentLocation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      (Icons.space_dashboard_rounded, 'Dashboard', AppRoutes.ngoDashboard),
+      (Icons.assignment_turned_in_outlined, 'Tasks', AppRoutes.ngoTasks),
+      (Icons.groups_2_outlined, 'Volunteers', AppRoutes.ngoVolunteers),
+      (Icons.summarize_outlined, 'Reports', AppRoutes.ngoReports),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('NGO Portal'),
+      ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: Column(
+            children: [
+              const ListTile(
+                leading: Icon(Icons.hub_rounded, color: AppColors.primary500),
+                title: Text('UnityHub NGO'),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children: [
+                    for (final item in items)
+                      ListTile(
+                        leading: Icon(item.$1),
+                        title: Text(item.$2),
+                        selected: currentLocation.startsWith(item.$3),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.go(item.$3);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Logout'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.go(AppRoutes.authNgo);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: SafeArea(child: child),
     );
   }
 }

@@ -16,6 +16,10 @@ class AppColors {
   static const Color background = Color(0xFFF9FAFB);
   static const Color error = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
+  static const Color info = Color(0xFF2563EB);
+  static const Color success = Color(0xFF059669);
+  static const Color neutral200 = Color(0xFFE5E7EB);
+  static const Color neutral500 = Color(0xFF6B7280);
 
   static const Color textPrimary = Color(0xFF111827);
   static const Color textSecondary = Color(0xFF6B7280);
@@ -73,7 +77,7 @@ class AppTheme {
           elevation: 0,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 1, // Approximation of shadow token
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -83,6 +87,23 @@ class AppTheme {
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.textPrimary,
+        contentTextStyle: TextStyle(color: AppColors.textInverse),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.neutral200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.neutral200),
         ),
       ),
     );

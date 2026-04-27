@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/features/map/map_view_model.dart';
+import 'package:unityhub_mobile/shared/widgets/adaptive/async_state_widgets.dart';
 import 'package:unityhub_mobile/shared/widgets/adaptive/status_badge.dart';
 
 class TaskListScreen extends ConsumerWidget {
@@ -10,6 +12,12 @@ class TaskListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tasks = ref.watch(mapTasksProvider);
+    if (tasks.isEmpty) {
+      return const AppEmptyState(
+        title: 'No tasks available',
+        message: 'New volunteer tasks will appear here once they are published.',
+      );
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
@@ -43,7 +51,12 @@ class TaskListScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () => context.go('/volunteer/verify/${task.id}'),
+                  onPressed: () {
+                    // Set the selected task BEFORE navigating so VerificationModal
+                    // reads the correct task title for the Gemini AI request
+                    ref.read(selectedTaskProvider.notifier).state = task;
+                    context.go(AppRoutes.volunteerVerify(task.id));
+                  },
                   child: const Text('Open Verification Flow'),
                 ),
               ],

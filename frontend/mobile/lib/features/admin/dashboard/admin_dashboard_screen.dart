@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
 import 'package:unityhub_mobile/features/admin/dashboard/dashboard_view_model.dart';
 import 'package:go_router/go_router.dart';
@@ -20,12 +21,12 @@ class AdminDashboardScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.manage_search),
-            onPressed: () => context.go('/admin/tasks'),
+            onPressed: () => context.go(AppRoutes.adminTasks),
             tooltip: 'Task Management',
           ),
           IconButton(
             icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () => context.go('/admin/reports'),
+            onPressed: () => context.go(AppRoutes.adminReports),
             tooltip: 'ESG Reports',
           ),
         ],
@@ -125,7 +126,7 @@ class AdminDashboardScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        boxShadow: const [BoxShadow(color: AppColors.neutral200, blurRadius: 4)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

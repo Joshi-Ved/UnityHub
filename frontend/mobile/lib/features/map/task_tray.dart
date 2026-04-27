@@ -27,7 +27,7 @@ class TaskTray extends ConsumerWidget {
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: AppColors.neutral200,
               blurRadius: 10,
               offset: Offset(0, -2),
             ),
@@ -89,7 +89,7 @@ class TaskTray extends ConsumerWidget {
                 onPressed: () {
                   showGeneralDialog(
                     context: context,
-                    barrierColor: Colors.black,
+                    barrierColor: AppColors.textPrimary,
                     barrierDismissible: false,
                     barrierLabel: 'Verification',
                     transitionDuration: const Duration(milliseconds: 300),

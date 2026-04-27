@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
 import 'package:unityhub_mobile/core/responsive/layout_builder.dart';
 import 'package:unityhub_mobile/features/map/map_view_model.dart';
@@ -84,17 +85,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: const [
-                            BoxShadow(color: Colors.black12, blurRadius: 8),
+                            BoxShadow(color: AppColors.neutral200, blurRadius: 8),
                           ],
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.search, color: Colors.grey),
+                            Icon(Icons.search, color: AppColors.textSecondary),
                             SizedBox(width: 12),
-                            Text('Search nearby tasks...', style: TextStyle(color: Colors.grey)),
+                            Text('Search nearby tasks...', style: TextStyle(color: AppColors.textSecondary)),
                           ],
                         ),
                       ),
@@ -102,15 +103,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     const SizedBox(width: 12),
                     Container(
                       decoration: const BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: Colors.black12, blurRadius: 8),
+                          BoxShadow(color: AppColors.neutral200, blurRadius: 8),
                         ],
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.account_balance_wallet, color: AppColors.primary500),
-                        onPressed: () => context.go('/volunteer/wallet'),
+                        onPressed: () => context.go(AppRoutes.volunteerWallet),
                       ),
                     ),
                   ],

@@ -25,18 +25,18 @@ class SideNavItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary500 : Colors.transparent,
+          color: isActive ? AppColors.primary500 : AppColors.surface.withOpacity(0),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isActive ? Colors.white : AppColors.textSecondary),
+            Icon(icon, color: isActive ? AppColors.textInverse : AppColors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isActive ? Colors.white : AppColors.textPrimary,
+                  color: isActive ? AppColors.textInverse : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

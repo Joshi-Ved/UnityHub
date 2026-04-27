@@ -1,6 +1,8 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
+import 'package:unityhub_mobile/core/theme/theme.dart';
+import 'package:unityhub_mobile/shared/widgets/adaptive/async_state_widgets.dart';
 import 'package:unityhub_mobile/shared/widgets/adaptive/status_badge.dart';
 import 'package:unityhub_mobile/shared/widgets/adaptive/unityhub_button.dart';
 
@@ -38,86 +40,117 @@ class _TaskManagementScreenState extends State<TaskManagementScreen> {
       return matchesText && matchesStatus;
     }).toList();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 1100;
+        final selectedTask = _selectedRow >= 0 && filtered.isNotEmpty
+            ? filtered[_selectedRow.clamp(0, filtered.length - 1)]
+            : null;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: SearchBar(
-                          controller: _searchController,
-                          hintText: 'Search by task name or location',
-                          onChanged: (_) => setState(() {}),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      DropdownButton<String>(
-                        value: _statusFilter,
-                        items: const [
-                          DropdownMenuItem(value: 'All', child: Text('All')),
-                          DropdownMenuItem(value: 'Active', child: Text('Active')),
-                          DropdownMenuItem(value: 'Completed', child: Text('Completed')),
-                          DropdownMenuItem(value: 'Flagged', child: Text('Flagged')),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          SizedBox(
+                            width: isCompact ? constraints.maxWidth - 32 : 420,
+                            child: SearchBar(
+                              controller: _searchController,
+                              hintText: 'Search by task name or location',
+                              onChanged: (_) => setState(() {}),
+                            ),
+                          ),
+                          DropdownButton<String>(
+                            value: _statusFilter,
+                            items: const [
+                              DropdownMenuItem(value: 'All', child: Text('All')),
+                              DropdownMenuItem(value: 'Active', child: Text('Active')),
+                              DropdownMenuItem(value: 'Completed', child: Text('Completed')),
+                              DropdownMenuItem(value: 'Flagged', child: Text('Flagged')),
+                            ],
+                            onChanged: (value) => setState(() => _statusFilter = value ?? 'All'),
+                          ),
+                          UnityHubButton(
+                            label: '+ Create Task',
+                            onPressed: () => _showTaskCreationDialog(context),
+                          ),
                         ],
-                        onChanged: (value) => setState(() => _statusFilter = value ?? 'All'),
                       ),
-                      const SizedBox(width: 12),
-                      UnityHubButton(
-                        label: '+ Create Task',
-                        onPressed: () => _showTaskCreationDialog(context),
-                      ),
+                      const SizedBox(height: 16),
+                      if (filtered.isEmpty)
+                        const AppEmptyState(
+                          title: 'No tasks match the filter',
+                          message: 'Try changing search text or status filter.',
+                        )
+                      else if (isCompact)
+                        Column(
+                          children: List.generate(filtered.length, (index) {
+                            final row = filtered[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              child: ListTile(
+                                onTap: () => setState(() => _selectedRow = index),
+                                title: Text(row['name'].toString()),
+                                subtitle: Text('${row['category']} • ${row['location']}'),
+                                trailing: StatusBadge(status: row['status'].toString()),
+                              ),
+                            );
+                          }),
+                        )
+                      else
+                        SizedBox(
+                          height: 500,
+                          child: DataTable2(
+                            columnSpacing: 12,
+                            horizontalMargin: 12,
+                            minWidth: 1000,
+                            columns: const [
+                              DataColumn2(label: Text('Task Name'), size: ColumnSize.L),
+                              DataColumn(label: Text('Category')),
+                              DataColumn(label: Text('Location')),
+                              DataColumn(label: Text('Status')),
+                              DataColumn(label: Text('Token Reward')),
+                              DataColumn(label: Text('Assigned Volunteers')),
+                              DataColumn(label: Text('Actions')),
+                            ],
+                            rows: List.generate(filtered.length, (index) {
+                              final row = filtered[index];
+                              return DataRow(
+                                selected: _selectedRow == index,
+                                onSelectChanged: (_) => setState(() => _selectedRow = index),
+                                cells: [
+                                  DataCell(Text(row['name'].toString())),
+                                  DataCell(Text(row['category'].toString())),
+                                  DataCell(Text(row['location'].toString())),
+                                  DataCell(StatusBadge(status: row['status'].toString())),
+                                  DataCell(Text('${row['reward']} VIT')),
+                                  DataCell(Text('${row['assigned']}')),
+                                  DataCell(TextButton(onPressed: () => setState(() => _selectedRow = index), child: const Text('View'))),
+                                ],
+                              );
+                            }),
+                          ),
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 500,
-                    child: DataTable2(
-                      columnSpacing: 12,
-                      horizontalMargin: 12,
-                      minWidth: 1000,
-                      columns: const [
-                        DataColumn2(label: Text('Task Name'), size: ColumnSize.L),
-                        DataColumn(label: Text('Category')),
-                        DataColumn(label: Text('Location')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Token Reward')),
-                        DataColumn(label: Text('Assigned Volunteers')),
-                        DataColumn(label: Text('Actions')),
-                      ],
-                      rows: List.generate(filtered.length, (index) {
-                        final row = filtered[index];
-                        return DataRow(
-                          selected: _selectedRow == index,
-                          onSelectChanged: (_) => setState(() => _selectedRow = index),
-                          cells: [
-                            DataCell(Text(row['name'].toString())),
-                            DataCell(Text(row['category'].toString())),
-                            DataCell(Text(row['location'].toString())),
-                            DataCell(StatusBadge(status: row['status'].toString())),
-                            DataCell(Text('${row['reward']} VIT')),
-                            DataCell(Text('${row['assigned']}')),
-                            DataCell(TextButton(onPressed: () => setState(() => _selectedRow = index), child: const Text('View'))),
-                          ],
-                        );
-                      }),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-        if (_selectedRow >= 0 && filtered.isNotEmpty) ...[
-          const SizedBox(width: 12),
-          SizedBox(width: 480, child: _TaskDetailPanel(task: filtered[_selectedRow.clamp(0, filtered.length - 1)])),
-        ],
-      ],
+            if (!isCompact && selectedTask != null) ...[
+              const SizedBox(width: 12),
+              SizedBox(width: 480, child: _TaskDetailPanel(task: selectedTask)),
+            ],
+          ],
+        );
+      },
     );
   }
 
@@ -252,7 +285,7 @@ class _TaskDetailPanel extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
+                          color: AppColors.neutral200,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(Icons.image_outlined),

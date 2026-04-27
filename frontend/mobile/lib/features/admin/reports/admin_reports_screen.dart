@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,7 +20,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         title: const Text('ESG Report Generator'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/admin/dashboard'),
+          onPressed: () => context.go(AppRoutes.adminDashboard),
         ),
       ),
       body: Center(

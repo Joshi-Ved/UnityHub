@@ -1,6 +1,6 @@
-fastapi[standard]
+fastapi
 pydantic
-uvicorn
+uvicorn[standard]
 google-genai
 eth-account
 python-multipart
@@ -9,3 +9,9 @@ slowapi
 google-cloud-secret-manager
 pytest
 pytest-asyncio
+httpx
+web3
+python-dotenv
+numpy
+sqlalchemy
+psycopg2-binary
