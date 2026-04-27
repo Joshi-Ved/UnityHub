@@ -18,6 +18,17 @@ class AuthScreen extends ConsumerStatefulWidget {
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isRegistering = false;
+
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _signInAsVolunteer() async {
     setState(() {
@@ -33,6 +44,37 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } catch (e) {
       setState(() {
         _errorMessage = 'Sign-in failed. Please try again.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _submitEmailPassword() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = 'Please enter email and password');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      if (_isRegistering) {
+        await authService.registerWithEmailPassword(email, password);
+      } else {
+        await authService.signInWithEmailPassword(email, password);
+      }
+      if (!mounted) return;
+      ref.read(authProvider.notifier).state = UserRole.ngo;
+      context.go(AppRoutes.adminDashboard);
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Authentication failed: ${e.toString().split(']').last.trim()}';
         _isLoading = false;
       });
     }
@@ -69,7 +111,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       child: Scaffold(
         backgroundColor: AppColors.primary50,
         body: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(32.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -82,7 +124,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   'Verified Impact Protocol',
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 18),
                 ),
-                const SizedBox(height: 64),
+                const SizedBox(height: 48),
 
                 if (_isLoading)
                   const CircularProgressIndicator()
@@ -97,16 +139,82 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
                       ),
                     ),
-                  if (widget.role == UserRole.ngo)
+                  if (widget.role == UserRole.ngo) ...[
+                    // Email Field
+                    TextField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: 16),
+                    // Password Field
+                    TextField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submitEmailPassword(),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Sign In / Register Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submitEmailPassword,
+                        style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+                        child: Text(_isRegistering ? 'Register' : 'Sign In'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Toggle Register/Sign In mode
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isRegistering = !_isRegistering;
+                          _errorMessage = null;
+                        });
+                      },
+                      child: Text(
+                        _isRegistering
+                            ? 'Already have an account? Sign In'
+                            : 'Need an account? Register',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text('OR', style: TextStyle(color: AppColors.textSecondary)),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Google Sign In Alternative
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: _signInAsNgo,
                         icon: const Icon(Icons.admin_panel_settings),
-                        label: const Text('Login via Google OAuth (NGO)'),
+                        label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
                       ),
                     ),
+                  ],
                 ],
 
                 if (_errorMessage != null) ...[
@@ -137,14 +245,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 TextButton(
                   onPressed: _isLoading
                       ? null
-                      : () => context.go(
+                      : () {
+                          setState(() {
+                            _errorMessage = null;
+                            _isRegistering = false;
+                            _emailController.clear();
+                            _passwordController.clear();
+                          });
+                          context.go(
                             widget.role == UserRole.volunteer
                                 ? AppRoutes.authNgo
                                 : AppRoutes.authVolunteer,
-                          ),
+                          );
+                        },
                   child: Text(
                     widget.role == UserRole.volunteer
-                        ? 'NGO Admin? Switch to Google OAuth'
+                        ? 'NGO Admin? Switch to NGO Login'
                         : 'Volunteer? Switch to DigiLocker',
                   ),
                 ),
