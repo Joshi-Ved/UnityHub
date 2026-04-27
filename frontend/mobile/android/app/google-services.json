@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "803491436570",
+    "project_id": "unityhub-afd87",
+    "storage_bucket": "unityhub-afd87.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:803491436570:android:2d48808da9291beb2399a3",
+        "android_client_info": {
+          "package_name": "com.unityhub.unityhub_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "803491436570-gl5bfqht38jo56g253jd745slnlv39n0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfF-3uLEZ5zod4HYxByCADJs5Lq78m820"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "803491436570-gl5bfqht38jo56g253jd745slnlv39n0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

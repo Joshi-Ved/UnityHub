@@ -3,16 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
 import 'package:unityhub_mobile/core/router/app_router.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // For demo purposes, we catch initialization errors if firebase is not configured
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    print('Firebase initialization failed: $e');
-  }
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(
     const ProviderScope(

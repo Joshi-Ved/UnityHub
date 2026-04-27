@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
@@ -407,11 +408,72 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
                 '🏅 ${task?.tokenReward ?? 10} VIT Minted to your Wallet',
                 style: const TextStyle(color: AppColors.primary200, fontSize: 16),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Polygon Tx: ${ref.watch(verificationTxHashProvider)?.substring(0, 15) ?? "0x123..."}...',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
+              const SizedBox(height: 12),
+              // Full tx hash with copy-to-clipboard
+              Builder(builder: (context) {
+                final txHash = ref.watch(verificationTxHashProvider);
+                if (txHash == null) return const SizedBox.shrink();
+                return Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        // Open Polygonscan in the system browser
+                        // Using in-app SnackBar as fallback since url_launcher
+                        // is not in pubspec (avoids adding a dep just for one link)
+                        await Clipboard.setData(ClipboardData(
+                          text: 'https://amoy.polygonscan.com/tx/$txHash',
+                        ));
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              '🔗 Polygonscan link copied to clipboard!',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            backgroundColor: AppColors.primary600,
+                            duration: const Duration(seconds: 3),
+                            action: SnackBarAction(
+                              label: 'Dismiss',
+                              textColor: Colors.white,
+                              onPressed: () {},
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary600.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.primary500.withOpacity(0.4)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.open_in_new, color: AppColors.primary300, size: 14),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                'Polygon Tx: ${txHash.substring(0, 10)}...${txHash.substring(txHash.length - 6)}',
+                                style: const TextStyle(
+                                  color: AppColors.primary200,
+                                  fontSize: 12,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Tap to copy Polygonscan link',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    ),
+                  ],
+                );
+              }),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
