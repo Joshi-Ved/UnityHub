@@ -177,7 +177,7 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
     return Scaffold(
       backgroundColor: AppColors.textPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.surface.withOpacity(0),
+        backgroundColor: AppColors.surface.withValues(alpha: 0),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: AppColors.textInverse),
@@ -443,9 +443,9 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary600.withOpacity(0.15),
+                          color: AppColors.primary600.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.primary500.withOpacity(0.4)),
+                          border: Border.all(color: AppColors.primary500.withValues(alpha: 0.4)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -487,9 +487,9 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withOpacity(0.08),
+                  color: AppColors.surface.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.error.withOpacity(0.4)),
+                  border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   _humanizeFailureReason(rawReason),

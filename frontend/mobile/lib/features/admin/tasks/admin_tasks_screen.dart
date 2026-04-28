@@ -217,7 +217,7 @@ class _AdminTasksScreenState extends ConsumerState<AdminTasksScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: available ? AppColors.primary100 : AppColors.warning.withOpacity(0.2),
+        color: available ? AppColors.primary100 : AppColors.warning.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

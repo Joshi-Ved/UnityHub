@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -104,7 +105,7 @@ class MapTasksNotifier extends StateNotifier<List<VolunteerTask>> {
           onError: (e) {
             // Firestore not available (e.g. Firebase not configured for this build).
             // Fallback order: backend(PostgreSQL) -> local mock JSON.
-            print('[MapTasksNotifier] Firestore error — trying backend: $e');
+            debugPrint('[MapTasksNotifier] Firestore error — trying backend: $e');
             _loadTasksFromBackend();
           },
         );

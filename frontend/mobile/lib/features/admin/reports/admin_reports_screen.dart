@@ -43,7 +43,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         SnackBar(content: Text('Report generation failed: $error')),
       );
     } finally {
-      if (!mounted) return;
       setState(() {
         _isGenerating = false;
       });
