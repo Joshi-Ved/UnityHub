@@ -10,7 +10,7 @@ from core_limiter import limiter
 router = APIRouter(prefix="/api-setu", tags=["DigiLocker"])
 
 # Demo mode: when DEMO_MODE=true, mTLS is not enforced so judges can test without infra
-_DEMO_MODE = os.environ.get("DEMO_MODE", "true").lower() == "true"
+_DEMO_MODE_DEFAULT = os.environ.get("DEMO_MODE", "false").lower() == "true"
 
 class KYCRequest(BaseModel):
     aadhaar_number: str
@@ -38,6 +38,7 @@ def verify_mtls_cert(request: Request):
     In DEMO_MODE, this check is skipped so the flow can be demonstrated without infra.
     """
     client_cert = request.headers.get("X-Client-Cert")
+    _DEMO_MODE = os.environ.get("DEMO_MODE", "false").lower() == "true"
     if not client_cert:
         if _DEMO_MODE:
             # Soft-pass in demo mode — log but don't block

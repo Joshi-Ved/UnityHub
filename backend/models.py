@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text, func
 from database import Base
+from database import engine
 
 
 class Task(Base):
@@ -65,3 +66,12 @@ class ImpactLog(Base):
     status = Column(String(32), nullable=False, default="verified") # verified | minted | failed
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+# Create tables at import time to ensure test client has schema available.
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception:
+    # If DB engine isn't available during some static analysis or import-time
+    # operations, don't fail import — tests will detect DB issues at runtime.
+    pass

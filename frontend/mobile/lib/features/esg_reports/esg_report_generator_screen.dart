@@ -45,7 +45,7 @@ class _ESGReportGeneratorScreenState extends State<ESGReportGeneratorScreen> {
                 Text('Report Controls', style: theme.textTheme.headlineLarge),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _org,
+                    initialValue: _org,
                     items: const [
                       DropdownMenuItem(value: 'UnityHub Foundation', child: Text('UnityHub Foundation')),
                       DropdownMenuItem(value: 'Helping Hands NGO', child: Text('Helping Hands NGO')),

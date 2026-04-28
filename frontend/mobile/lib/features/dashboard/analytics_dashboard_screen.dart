@@ -198,8 +198,9 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                             'Token Minted',
                           ];
                           final index = value.toInt();
-                          if (index < 0 || index >= labels.length)
+                          if (index < 0 || index >= labels.length) {
                             return const SizedBox.shrink();
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(

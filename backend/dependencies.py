@@ -1,10 +1,6 @@
 import os
 from fastapi import Header, HTTPException
 
-# When DEMO_MODE=true (default), auth is relaxed so Flutter can call the backend
-# without a full PKCE/biometric token flow being wired. Set to false in production.
-_DEMO_MODE = os.environ.get("DEMO_MODE", "true").lower() == "true"
-
 async def verify_biometric_jwt(authorization: str = Header(None)):
     """
     Dependency that verifies a JWT contains biometric assertions.
@@ -12,25 +8,13 @@ async def verify_biometric_jwt(authorization: str = Header(None)):
     In DEMO_MODE, accepts the mock token OR no token at all so the demo
     flow is never blocked by missing auth infrastructure.
     """
-    if _DEMO_MODE:
-        # Accept any call in demo mode — log it but don't block
-        token = (authorization or "").replace("Bearer ", "") or "demo-no-token"
-        print(f"[DEMO MODE] Auth bypass — token: {token[:16]}...")
-        return token
-
-    # Production path: enforce real bearer token
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail={
-                "code": "missing_jwt",
-                "message": "Missing or invalid JWT token.",
-                "retryable": False,
-            },
-        )
-    token = authorization.split(" ")[1]
-    # TODO: Replace with real JWT verification (firebase-admin / python-jose)
-    if token != "mock_biometric_token":
+    # If a bearer token is provided, validate it strictly (tests expect a
+    # 403 for invalid tokens). If no Authorization header is present, fall
+    # back to DEMO_MODE behavior so integration tests without auth still work.
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1]
+        if token == "mock_biometric_token":
+            return token
         raise HTTPException(
             status_code=403,
             detail={
@@ -39,4 +23,20 @@ async def verify_biometric_jwt(authorization: str = Header(None)):
                 "retryable": False,
             },
         )
-    return token
+
+    # No authorization header supplied — allow demo bypass when DEMO_MODE
+    # is enabled so integration tests and local demos work without infra.
+    _DEMO_MODE = os.environ.get("DEMO_MODE", "true").lower() == "true"
+    if _DEMO_MODE:
+        token = "demo-no-token"
+        print(f"[DEMO MODE] Auth bypass — token: {token[:16]}...")
+        return token
+
+    raise HTTPException(
+        status_code=401,
+        detail={
+            "code": "missing_jwt",
+            "message": "Missing or invalid JWT token.",
+            "retryable": False,
+        },
+    )

@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from dependencies import verify_biometric_jwt
 from routes.impact import router as impact_router
 from routes.digilocker import router as digilocker_router
 from routes.tasks import router as tasks_router
