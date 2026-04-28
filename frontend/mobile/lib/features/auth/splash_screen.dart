@@ -14,9 +14,9 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-redirect to the volunteer auth screen after 1.5 seconds
+    // Auto-redirect to onboarding after 1.5 seconds
     Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) context.go(AppRoutes.authVolunteer);
+      if (mounted) context.go(AppRoutes.onboarding);
     });
   }
 

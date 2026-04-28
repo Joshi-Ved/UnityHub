@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:unityhub_mobile/core/config/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class VolunteerTask {
   final String id;
@@ -114,7 +115,10 @@ class MapTasksNotifier extends StateNotifier<List<VolunteerTask>> {
   Future<void> _loadTasksFromBackend() async {
     try {
       final uri = Uri.parse('${AppConstants.apiBaseUrl}/tasks?status=available');
-      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+      final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+      final response = await http.get(uri, headers: {
+        if (token != null) 'Authorization': 'Bearer $token',
+      }).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body) as List<dynamic>;
         state = decoded
@@ -206,10 +210,14 @@ class MapTasksNotifier extends StateNotifier<List<VolunteerTask>> {
         'lat': 19.0760,
         'lng': 72.8777,
       });
+      final token = await FirebaseAuth.instance.currentUser?.getIdToken();
       final response = await http
           .post(
             uri,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              if (token != null) 'Authorization': 'Bearer $token',
+            },
             body: body,
           )
           .timeout(const Duration(seconds: 10));

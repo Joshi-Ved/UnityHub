@@ -7,6 +7,11 @@ import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
 import 'package:unityhub_mobile/core/responsive/layout_builder.dart';
 import 'package:unityhub_mobile/features/map/map_view_model.dart';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:unityhub_mobile/core/config/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:unityhub_mobile/features/map/task_tray.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
@@ -21,6 +26,41 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     target: LatLng(19.0760, 72.8777), // Mumbai Center
     zoom: 12.0,
   );
+
+  Timer? _pingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startLocationPinging();
+  }
+
+  void _startLocationPinging() {
+    _pingTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+      try {
+        final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+        await http.post(
+          Uri.parse('${AppConstants.apiBaseUrl}/api/volunteers/ping'),
+          headers: {
+            'Content-Type': 'application/json',
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            'lat': _initialPosition.target.latitude,
+            'lng': _initialPosition.target.longitude,
+          }),
+        );
+      } catch (_) {
+        // Ignore silently for demo
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pingTimer?.cancel();
+    super.dispose();
+  }
 
   BitmapDescriptor _getMarkerIcon(String status) {
     // In a real app, load custom SVGs or asset images here

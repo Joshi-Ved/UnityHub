@@ -51,7 +51,7 @@ Generated: 2026-04-27 (Final 24-hour push complete)
 | Atomic commits | ✅ Done | 3 feature commits: infra, Firebase, trust layer |
 | `README.md` final architecture | ✅ Updated | Full ASCII system diagram + updated tech stack + API error table |
 | `PROJECT_STATUS.md` 100% | ✅ This file |  |
-| `git push origin main` | ✅ Pending | Final push after this file |
+| `git push origin main` | ✅ Done | Final push complete |
 
 ---
 
@@ -118,3 +118,20 @@ Admin Dashboard Update
    - `uvicorn main:app --reload` from `backend/`
    - `flutter run` from `frontend/mobile/`
    - `GET http://localhost:8000/api-setu/status` → Identity Verified badge
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBwOcRp-JnOx9WsZf1aHdehtbWOP6FkfXY",
+  authDomain: "unityhub-afd87.firebaseapp.com",
+  projectId: "unityhub-afd87",
+  storageBucket: "unityhub-afd87.firebasestorage.app",
+  messagingSenderId: "803491436570",
+  appId: "1:803491436570:web:5e4b9cb658d57a9b2399a3"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);

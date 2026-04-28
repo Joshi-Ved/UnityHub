@@ -7,6 +7,7 @@ import 'package:unityhub_mobile/features/map/map_screen.dart';
 import 'package:unityhub_mobile/features/wallet/wallet_screen.dart';
 import 'package:unityhub_mobile/features/auth/auth_screen.dart';
 import 'package:unityhub_mobile/features/auth/splash_screen.dart';
+import 'package:unityhub_mobile/features/onboarding/onboarding_screen.dart';
 import 'package:unityhub_mobile/features/tasks/task_list_screen.dart';
 import 'package:unityhub_mobile/features/tasks/verification_modal.dart';
 import 'package:unityhub_mobile/features/profile/volunteer_profile_screen.dart';
@@ -40,7 +41,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (authState == UserRole.none) {
-        if (isAuthRoute || location == AppRoutes.splash) return null;
+        if (isAuthRoute || location == AppRoutes.splash || location == AppRoutes.onboarding) return null;
         if (location.startsWith(AppRoutes.ngoPrefix) || location.startsWith(AppRoutes.adminPrefix) || location.startsWith(AppRoutes.sponsorPrefix)) {
           return AppRoutes.authNgo;
         }
@@ -69,6 +70,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: AppRoutes.authVolunteer,

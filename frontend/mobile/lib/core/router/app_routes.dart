@@ -1,5 +1,6 @@
 class AppRoutes {
   static const String splash = '/';
+  static const String onboarding = '/onboarding';
   static const String authPrefix = '/auth';
   static const String volunteerPrefix = '/volunteer';
   static const String ngoPrefix = '/ngo';

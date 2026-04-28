@@ -2,26 +2,35 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:unityhub_mobile/core/config/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AdminApi {
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
+
   Future<Map<String, dynamic>> fetchDashboard({String orgId = 'demo-org', String range = '30d'}) async {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}/api/analytics/dashboard')
         .replace(queryParameters: {'org_id': orgId, 'range': range});
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
     return _parseJson(response);
   }
 
   Future<Map<String, dynamic>> fetchActivity({String orgId = 'demo-org'}) async {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}/api/analytics/activity')
         .replace(queryParameters: {'org_id': orgId});
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
     return _parseJson(response);
   }
 
   Future<List<Map<String, dynamic>>> fetchTasks({String orgId = 'demo-org'}) async {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}/api/tasks')
         .replace(queryParameters: {'org_id': orgId});
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
     final body = _parseJson(response);
     return _asMapList(body['tasks']);
   }
@@ -35,7 +44,7 @@ class AdminApi {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}/api/tasks/create');
     final response = await http.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
       body: jsonEncode({
         'title': title,
         'description': description,
@@ -48,7 +57,7 @@ class AdminApi {
 
   Future<List<String>> fetchTaskLogs(String taskId) async {
     final uri = Uri.parse('${AppConstants.apiBaseUrl}/api/tasks/$taskId/logs');
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
     final body = _parseJson(response);
     final logs = body['logs'];
     if (logs is List) {
@@ -70,7 +79,7 @@ class AdminApi {
       },
     );
 
-    final response = await http.get(uri);
+    final response = await http.get(uri, headers: await _getHeaders());
     return _parseJson(response);
   }
 

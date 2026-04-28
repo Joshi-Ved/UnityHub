@@ -72,24 +72,7 @@ final adminDashboardProvider = FutureProvider<AdminDashboardData>((ref) async {
       activity: activityRows,
       leaderboard: leaderboard,
     );
-  } catch (_) {
-    return AdminDashboardData(
-      stats: DashboardStats(
-        verifiedHours: 1250,
-        activeVolunteers: 85,
-        tasksCompleted: 420,
-        vitMinted: 15400,
-      ),
-      activity: [
-        ActivityLog(volunteerName: 'Rahul M.', taskName: 'Beach Cleanup', vitMinted: 15),
-        ActivityLog(volunteerName: 'Sneha P.', taskName: 'Tree Plantation', vitMinted: 20),
-        ActivityLog(volunteerName: 'Aman K.', taskName: 'Food Distribution', vitMinted: 30),
-      ],
-      leaderboard: [
-        {'name': 'Sneha P.', 'tasks': 45, 'vit': 1200, 'score': 98},
-        {'name': 'Rahul M.', 'tasks': 38, 'vit': 950, 'score': 92},
-        {'name': 'Priya S.', 'tasks': 32, 'vit': 800, 'score': 89},
-      ],
-    );
+  } catch (e) {
+    throw Exception('Failed to load dashboard data: $e');
   }
 });

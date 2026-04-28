@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import 'package:unityhub_mobile/core/config/constants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // State Enum
 enum VerificationStep { capture, verifying, minting, result }
@@ -95,8 +96,11 @@ class _VerificationModalState extends ConsumerState<VerificationModal> {
       final uri = Uri.parse('${AppConstants.apiBaseUrl}/verify-impact');
       var request = http.MultipartRequest('POST', uri);
 
-      // Auth header — demo token; replace with real JWT when auth is wired
-      request.headers['Authorization'] = 'Bearer mock_biometric_token';
+      // Auth header — real JWT from Firebase
+      final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
 
       // Use the session wallet address, not a hardcoded dummy
       request.fields['ngo_task'] = task?.title ?? 'Unknown Task';
