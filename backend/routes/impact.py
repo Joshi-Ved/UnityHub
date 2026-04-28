@@ -23,6 +23,7 @@ from database import get_db
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from services.gemini_oracle import GeminiOracleService
 from services.cloudinary_service import cloudinary_service
+from services.bigquery_service import bigquery_service
 from models import ImpactLog
 
 router = APIRouter()
@@ -171,6 +172,21 @@ def _persist_impact_log(
         )
         db.add(log)
         db.commit()
+
+        # Sync to BigQuery for real-time analytics
+        try:
+            bigquery_service.insert_impact_log({
+                "id": log.id,
+                "user_address": user_address,
+                "task_title": task_title,
+                "status": status,
+                "confidence_score": confidence_score,
+                "token_reward": token_reward,
+                "created_at": datetime.utcnow().isoformat()
+            })
+        except Exception as bq_exc:
+            print(f"[ImpactLog] BigQuery sync error (non-fatal): {bq_exc}")
+
     except Exception as exc:
         db.rollback()
         print(f"[ImpactLog] DB persist error (non-fatal): {exc}")

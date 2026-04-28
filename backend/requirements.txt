@@ -15,4 +15,5 @@ python-dotenv
 numpy
 sqlalchemy
 psycopg2-binary
+google-cloud-bigquery
 cloudinary

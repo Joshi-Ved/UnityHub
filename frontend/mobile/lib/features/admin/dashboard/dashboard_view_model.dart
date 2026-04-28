@@ -31,11 +31,13 @@ class AdminDashboardData {
   final DashboardStats stats;
   final List<ActivityLog> activity;
   final List<Map<String, dynamic>> leaderboard;
+  final Map<String, int> funnel;
 
   AdminDashboardData({
     required this.stats,
     required this.activity,
     required this.leaderboard,
+    required this.funnel,
   });
 }
 
@@ -62,6 +64,14 @@ final adminDashboardProvider = FutureProvider<AdminDashboardData>((ref) async {
             ))
         .toList();
 
+    final funnelRaw = (dashboard['funnel'] as Map? ?? const {});
+    final funnel = {
+      'submitted': (funnelRaw['submitted'] as num?)?.toInt() ?? 0,
+      'processed': (funnelRaw['processed'] as num?)?.toInt() ?? 0,
+      'approved': (funnelRaw['approved'] as num?)?.toInt() ?? 0,
+      'minted': (funnelRaw['minted'] as num?)?.toInt() ?? 0,
+    };
+
     return AdminDashboardData(
       stats: DashboardStats(
         verifiedHours: (kpi['verified_hours'] as num?)?.toInt() ?? 0,
@@ -71,6 +81,7 @@ final adminDashboardProvider = FutureProvider<AdminDashboardData>((ref) async {
       ),
       activity: activityRows,
       leaderboard: leaderboard,
+      funnel: funnel,
     );
   } catch (e) {
     throw Exception('Failed to load dashboard data: $e');

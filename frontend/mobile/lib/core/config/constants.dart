@@ -7,4 +7,8 @@ class AppConstants {
 
   // Polygon Amoy RPC URL
   static const String rpcUrl = 'https://rpc-amoy.polygon.technology/';
+
+  // Mapbox Access Token
+  static const String mapboxToken = 'pk.eyJ1IjoiaGFyc2hhbGNodWd3YW5pIiwiYSI6ImNtb2lyOTdpbTA1YjQycXIwdDR4ZmRvbGQifQ'
+      '.jNznPh8fRme1Z59cim1Wsg';
 }

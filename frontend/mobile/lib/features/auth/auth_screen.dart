@@ -70,8 +70,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         await authService.signInWithEmailPassword(email, password);
       }
       if (!mounted) return;
-      ref.read(authProvider.notifier).state = UserRole.ngo;
-      context.go(AppRoutes.adminDashboard);
+      if (widget.role == UserRole.volunteer) {
+        ref.read(authProvider.notifier).state = UserRole.volunteer;
+        context.go(AppRoutes.volunteerMap);
+      } else {
+        ref.read(authProvider.notifier).state = UserRole.ngo;
+        context.go(AppRoutes.adminDashboard);
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Authentication failed: ${e.toString().split(']').last.trim()}';
@@ -94,8 +99,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         setState(() => _isLoading = false);
         return;
       }
-      ref.read(authProvider.notifier).state = UserRole.ngo;
-      context.go(AppRoutes.adminDashboard);
+      if (widget.role == UserRole.volunteer) {
+        ref.read(authProvider.notifier).state = UserRole.volunteer;
+        context.go(AppRoutes.volunteerMap);
+      } else {
+        ref.read(authProvider.notifier).state = UserRole.ngo;
+        context.go(AppRoutes.adminDashboard);
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Google sign-in failed: ${e.toString().split(']').last.trim()}';
@@ -129,7 +139,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 if (_isLoading)
                   const CircularProgressIndicator()
                 else ...[
-                  if (widget.role == UserRole.volunteer)
+                  if (widget.role == UserRole.volunteer) ...[
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -139,8 +149,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
                       ),
                     ),
-                  if (widget.role == UserRole.ngo) ...[
-                    // Email Field
+                    const SizedBox(height: 24),
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text('OR', style: TextStyle(color: AppColors.textSecondary)),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  // Email Field
                     TextField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -214,7 +236,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
                       ),
                     ),
-                  ],
                 ],
 
                 if (_errorMessage != null) ...[

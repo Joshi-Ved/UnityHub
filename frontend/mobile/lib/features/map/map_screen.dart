@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:go_router/go_router.dart';
 import 'package:unityhub_mobile/core/router/app_routes.dart';
 import 'package:unityhub_mobile/core/theme/theme.dart';
@@ -22,10 +23,10 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  static const CameraPosition _initialPosition = CameraPosition(
-    target: LatLng(19.0760, 72.8777), // Mumbai Center
-    zoom: 12.0,
-  );
+  static const LatLng _initialPosition = LatLng(19.0760, 72.8777); // Mumbai Center
+  
+  // Mapbox Style URL (Standard / Streets)
+  static const String _mapboxStyle = "mapbox/streets-v12";
 
   Timer? _pingTimer;
 
@@ -46,8 +47,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             if (token != null) 'Authorization': 'Bearer $token',
           },
           body: jsonEncode({
-            'lat': _initialPosition.target.latitude,
-            'lng': _initialPosition.target.longitude,
+            'lat': _initialPosition.latitude,
+            'lng': _initialPosition.longitude,
           }),
         );
       } catch (_) {
@@ -62,17 +63,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     super.dispose();
   }
 
-  BitmapDescriptor _getMarkerIcon(String status) {
-    // In a real app, load custom SVGs or asset images here
-    // based on color specs: Emerald (available), Amber (in-progress), Gray (completed)
+  Color _getMarkerColor(String status) {
     switch (status) {
       case 'available':
-        return BitmapDescriptor.defaultMarkerWithHue(150.0); // Approx Emerald
+        return AppColors.primary500; // Emerald
       case 'in-progress':
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange); // Approx Amber
+        return AppColors.warning; // Amber
       case 'completed':
+        return AppColors.neutral500; // Gray
       default:
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure); // Generic Gray fallback
+        return AppColors.primary500;
     }
   }
 
@@ -81,16 +81,30 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final tasks = ref.watch(mapTasksProvider);
     final selectedTask = ref.watch(selectedTaskProvider);
 
-    Set<Marker> markers = tasks.map((task) {
+    final markers = tasks.map((task) {
       return Marker(
-        markerId: MarkerId(task.id),
-        position: task.location,
-        icon: _getMarkerIcon(task.status),
-        onTap: () {
-          ref.read(selectedTaskProvider.notifier).state = task;
-        },
+        point: LatLng(task.location.latitude, task.location.longitude),
+        width: 40,
+        height: 40,
+        child: GestureDetector(
+          onTap: () {
+            ref.read(selectedTaskProvider.notifier).state = task;
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: _getMarkerColor(task.status).withOpacity(0.2),
+              shape: BoxShape.circle,
+              border: Border.all(color: _getMarkerColor(task.status), width: 2),
+            ),
+            child: Icon(
+              Icons.location_on,
+              color: _getMarkerColor(task.status),
+              size: 24,
+            ),
+          ),
+        ),
       );
-    }).toSet();
+    }).toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -100,20 +114,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         return Scaffold(
           body: Stack(
             children: [
-              GoogleMap(
-                initialCameraPosition: _initialPosition,
-                markers: markers,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                mapToolbarEnabled: false,
-                tiltGesturesEnabled: !kIsWeb,
-                onMapCreated: (_) {},
-                onTap: (_) {
-                  if (selectedTask != null) {
-                    ref.read(selectedTaskProvider.notifier).state = null;
-                  }
-                },
+              FlutterMap(
+                options: MapOptions(
+                  initialCenter: _initialPosition,
+                  initialZoom: 12.0,
+                  onTap: (_, __) {
+                    if (selectedTask != null) {
+                      ref.read(selectedTaskProvider.notifier).state = null;
+                    }
+                  },
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: "https://api.mapbox.com/styles/v1/{id}/tiles/256/{z}/{x}/{y}@2x?access_token={accessToken}",
+                    additionalOptions: const {
+                      'accessToken': AppConstants.mapboxToken,
+                      'id': _mapboxStyle,
+                    },
+                    userAgentPackageName: 'com.unityhub.unityhub_mobile',
+                  ),
+                  MarkerLayer(markers: markers),
+                ],
               ),
               Positioned(
                 top: 50,

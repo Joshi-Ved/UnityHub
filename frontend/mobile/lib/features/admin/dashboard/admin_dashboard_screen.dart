@@ -30,42 +30,42 @@ class AdminDashboardScreen extends ConsumerWidget {
         final activityLogs = dashboardData.activity;
         final topVolunteers = dashboardData.leaderboard;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('NGO Analytics Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.manage_search),
-            onPressed: () => context.go('/admin/tasks'),
-            tooltip: 'Task Management',
-          ),
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            onPressed: () => context.go('/admin/reports'),
-            tooltip: 'ESG Reports',
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // KPI Row
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildKPICard(context, 'Verified Hours', '${stats.verifiedHours}', Icons.timer),
-                  _buildKPICard(context, 'Active Volunteers', '${stats.activeVolunteers}', Icons.people),
-                  _buildKPICard(context, 'Tasks Completed', '${stats.tasksCompleted}', Icons.task_alt),
-                  _buildKPICard(context, 'VIT Minted', '${stats.vitMinted}', Icons.generating_tokens),
-                ],
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('NGO Analytics Dashboard'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.manage_search),
+                onPressed: () => context.go('/admin/tasks'),
+                tooltip: 'Task Management',
               ),
-            ),
-            const SizedBox(height: 32),
-            
-                // Funnel Chart
+              IconButton(
+                icon: const Icon(Icons.picture_as_pdf),
+                onPressed: () => context.go('/admin/reports'),
+                tooltip: 'ESG Reports',
+              ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // KPI Row
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildKPICard(context, 'Verified Hours', '${stats.verifiedHours}', Icons.timer),
+                      _buildKPICard(context, 'Active Volunteers', '${stats.activeVolunteers}', Icons.people),
+                      _buildKPICard(context, 'Tasks Completed', '${stats.tasksCompleted}', Icons.task_alt),
+                      _buildKPICard(context, 'VIT Minted', '${stats.vitMinted}', Icons.generating_tokens),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                // Funnel Chart (Wired to BigQuery)
                 Text('Verification Funnel', style: Theme.of(context).textTheme.headlineLarge),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -74,10 +74,10 @@ class AdminDashboardScreen extends ConsumerWidget {
                     BarChartData(
                       alignment: BarChartAlignment.spaceAround,
                       barGroups: [
-                        BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 100, color: AppColors.primary200, width: 30)]),
-                        BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 80, color: AppColors.primary400, width: 30)]),
-                        BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 70, color: AppColors.primary500, width: 30)]),
-                        BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 65, color: AppColors.primary700, width: 30)]),
+                        BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: (dashboardData.funnel['submitted'] ?? 0).toDouble(), color: AppColors.primary200, width: 30)]),
+                        BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: (dashboardData.funnel['processed'] ?? 0).toDouble(), color: AppColors.primary400, width: 30)]),
+                        BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: (dashboardData.funnel['approved'] ?? 0).toDouble(), color: AppColors.primary500, width: 30)]),
+                        BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: (dashboardData.funnel['minted'] ?? 0).toDouble(), color: AppColors.primary700, width: 30)]),
                       ],
                       titlesData: FlTitlesData(
                         show: true,
@@ -85,7 +85,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              const titles = ['Submitted', 'AI Processed', 'Approved', 'Minted'];
+                              const titles = ['Submitted', 'Processed', 'Approved', 'Minted'];
                               final index = value.toInt();
                               if (index < 0 || index >= titles.length) return const SizedBox.shrink();
                               return Text(titles[index], style: const TextStyle(fontSize: 10));

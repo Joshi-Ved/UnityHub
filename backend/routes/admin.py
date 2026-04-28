@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from models import ImpactLog, Task
+from services.bigquery_service import bigquery_service
 
 router = APIRouter(prefix="/api", tags=["Admin"])
 
@@ -88,41 +89,32 @@ async def analytics_dashboard(
             for row in leaderboard_rows
         ]
 
-        # Seed leaderboard with sample data when DB is empty
-        if not leaderboard:
-            leaderboard = [
-                {"name": "Sneha P.", "tasks": 45, "vit": 1200, "score": 98},
-                {"name": "Rahul M.", "tasks": 38, "vit": 950, "score": 92},
-                {"name": "Priya S.", "tasks": 32, "vit": 800, "score": 89},
-            ]
+        # Fetch funnel metrics from BigQuery
+        funnel = bigquery_service.get_funnel_metrics()
 
         return {
             "kpi": {
-                "verified_hours": int(verified_hours) or 1250,
-                "active_volunteers": int(active_volunteers) or 85,
-                "tasks_completed": int(tasks_completed) or 420,
-                "vit_minted": int(vit_minted) or 15400,
+                "verified_hours": int(verified_hours),
+                "active_volunteers": int(active_volunteers),
+                "tasks_completed": int(tasks_completed),
+                "vit_minted": int(vit_minted),
             },
+            "funnel": funnel,
             "leaderboard": leaderboard,
-            "source": "neondb" if active_volunteers > 0 else "sample",
+            "source": "hybrid_neon_bq",
         }
 
     except Exception as exc:
         print(f"[Admin Dashboard] DB query error: {exc}")
-        # Return sample data so the dashboard never goes blank
         return {
             "kpi": {
-                "verified_hours": 1250,
-                "active_volunteers": 85,
-                "tasks_completed": 420,
-                "vit_minted": 15400,
+                "verified_hours": 0,
+                "active_volunteers": 0,
+                "tasks_completed": 0,
+                "vit_minted": 0,
             },
-            "leaderboard": [
-                {"name": "Sneha P.", "tasks": 45, "vit": 1200, "score": 98},
-                {"name": "Rahul M.", "tasks": 38, "vit": 950, "score": 92},
-                {"name": "Priya S.", "tasks": 32, "vit": 800, "score": 89},
-            ],
-            "source": "sample_fallback",
+            "leaderboard": [],
+            "source": "error_fallback",
         }
 
 
@@ -152,23 +144,13 @@ async def analytics_activity(
             for log in logs
         ]
 
-        if not activity:
-            activity = [
-                {"volunteer_name": "Rahul M.", "task_name": "Beach Cleanup", "vit_minted": 15, "cloudinary_url": "", "ipfs_uri": "", "confidence_score": 0.95, "created_at": ""},
-                {"volunteer_name": "Sneha P.", "task_name": "Tree Plantation", "vit_minted": 20, "cloudinary_url": "", "ipfs_uri": "", "confidence_score": 0.97, "created_at": ""},
-                {"volunteer_name": "Aman K.", "task_name": "Food Distribution", "vit_minted": 30, "cloudinary_url": "", "ipfs_uri": "", "confidence_score": 0.93, "created_at": ""},
-            ]
-
-        return {"activity": activity, "source": "neondb" if logs else "sample"}
+        return {"activity": activity, "source": "neondb"}
 
     except Exception as exc:
         print(f"[Admin Activity] DB query error: {exc}")
         return {
-            "activity": [
-                {"volunteer_name": "Rahul M.", "task_name": "Beach Cleanup", "vit_minted": 15, "cloudinary_url": "", "ipfs_uri": "", "confidence_score": 0.95, "created_at": ""},
-                {"volunteer_name": "Sneha P.", "task_name": "Tree Plantation", "vit_minted": 20, "cloudinary_url": "", "ipfs_uri": "", "confidence_score": 0.97, "created_at": ""},
-            ],
-            "source": "sample_fallback",
+            "activity": [],
+            "source": "error_fallback",
         }
 
 
@@ -181,7 +163,7 @@ async def list_tasks(org_id: str = "demo-org", db: Session = Depends(get_db)):
         tasks = db.query(Task).order_by(desc(Task.created_at)).all()
 
         if not tasks:
-            return {"tasks": _SEED_TASKS, "source": "seed"}
+            return {"tasks": [], "source": "neondb"}
 
         return {
             "tasks": [
@@ -201,7 +183,7 @@ async def list_tasks(org_id: str = "demo-org", db: Session = Depends(get_db)):
         }
     except Exception as exc:
         print(f"[Tasks List] DB query error: {exc}")
-        return {"tasks": _SEED_TASKS, "source": "sample_fallback"}
+        return {"tasks": [], "source": "error_fallback"}
 
 
 @router.post("/tasks/create")
@@ -259,8 +241,7 @@ async def task_logs(task_id: str, db: Session = Depends(get_db)):
         ]
 
         if not formatted:
-            # Return seed logs for known demo task IDs
-            return {"task_id": task_id, "logs": _SEED_TASK_LOGS.get(task_id, [f"No logs found for task {task_id}"])}
+            return {"task_id": task_id, "logs": []}
 
         return {"task_id": task_id, "logs": formatted}
 
