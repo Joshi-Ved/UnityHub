@@ -35,6 +35,7 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
     clientId: kIsWeb ? '803491436570-gl5bfqht38jo56g253jd745slnlv39n0.apps.googleusercontent.com' : null,
+    serverClientId: '803491436570-gl5bfqht38jo56g253jd745slnlv39n0.apps.googleusercontent.com',
   );
 
   User? get currentUser => _auth.currentUser;
